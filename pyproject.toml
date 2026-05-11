@@ -10,9 +10,10 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest>=8",
+    "ruff>=0.11",
 ]
 
 [tool.setuptools.packages.find]
@@ -21,3 +22,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.ruff]
+extend-exclude = ["notebooks/legacy_capstone.ipynb"]

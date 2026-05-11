@@ -15,3 +15,23 @@ Planned package areas:
 - `companion`: coordinate user-facing companion behavior.
 
 The current scaffold intentionally avoids heavy dependencies, generated data, and database setup. Implementation will be added incrementally.
+
+## Development
+
+Install the project and development tools with uv:
+
+```sh
+uv sync
+```
+
+Run the smoke test:
+
+```sh
+uv run pytest
+```
+
+Run lint checks:
+
+```sh
+uv run ruff check .
+```
