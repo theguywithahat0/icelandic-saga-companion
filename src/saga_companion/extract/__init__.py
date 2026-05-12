@@ -26,6 +26,12 @@ from saga_companion.extract.prompts import (
     expected_extraction_json_shape,
     relationship_type_values,
 )
+from saga_companion.extract.runner import (
+    ExtractionModelClient,
+    ExtractionResult,
+    extract_passage,
+    extract_passages,
+)
 from saga_companion.extract.schemas import (
     EventType,
     EvidenceRef,
@@ -41,8 +47,10 @@ from saga_companion.extract.schemas import (
 
 __all__ = [
     "EventType",
+    "ExtractionModelClient",
     "ExtractionParseError",
     "ExtractionPrompt",
+    "ExtractionResult",
     "EvidenceRef",
     "ExtractedEntityType",
     "ExtractedEvent",
@@ -58,6 +66,8 @@ __all__ = [
     "evidence_from_dict",
     "evidence_to_dict",
     "empty_passage_extraction",
+    "extract_passage",
+    "extract_passages",
     "extract_json_object",
     "expected_extraction_json_shape",
     "passage_extraction_from_dict",
