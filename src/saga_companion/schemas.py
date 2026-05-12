@@ -129,7 +129,9 @@ def build_source_id(raw_id: str) -> str:
     normalized = raw_id.replace("_", "-").lower()
     normalized = re.sub(r"\s+", "-", normalized)
     normalized = re.sub(r"-+", "-", normalized)
-    return normalized.strip("-")
+    source_id = normalized.strip("-")
+    _require_id(source_id, "source_id")
+    return source_id
 
 
 def build_chapter_id(source_id: str, chapter_index: int) -> str:
@@ -154,7 +156,7 @@ def build_passage_id(source_id: str, chapter_index: int, passage_index: int) -> 
 
 
 def _require_id(value: str, field_name: str) -> None:
-    if not value:
+    if not value.strip():
         raise ValueError(f"{field_name} must not be empty")
 
 

@@ -39,6 +39,12 @@ def test_source_id_normalization(raw_id: str, expected: str) -> None:
     assert build_source_id(raw_id) == expected
 
 
+@pytest.mark.parametrize("raw_id", ["", "   "])
+def test_empty_normalized_source_id_raises_value_error(raw_id: str) -> None:
+    with pytest.raises(ValueError):
+        build_source_id(raw_id)
+
+
 def test_chapter_block_and_passage_id_builders() -> None:
     source_id = "egils-saga"
 
@@ -93,6 +99,26 @@ def test_invalid_indexes_raise_value_error(factory: object) -> None:
     ],
 )
 def test_empty_ids_raise_value_error(factory: object) -> None:
+    with pytest.raises(ValueError):
+        factory()
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        lambda: SourceRef("   ", SourceFormat.PLAIN_TEXT, "file.txt", None, None, None),
+        lambda: SourceRef("source", SourceFormat.PLAIN_TEXT, "   ", None, None, None),
+        lambda: ChapterRef("   ", "chapter", 1, None, None),
+        lambda: ChapterRef("source", "   ", 1, None, None),
+        lambda: BlockRef("   ", "chapter", "block", 1, TextBlockKind.PARAGRAPH),
+        lambda: BlockRef("source", "   ", "block", 1, TextBlockKind.PARAGRAPH),
+        lambda: BlockRef("source", "chapter", "   ", 1, TextBlockKind.PARAGRAPH),
+        lambda: PassageRef("   ", "chapter", "passage", 1),
+        lambda: PassageRef("source", "   ", "passage", 1),
+        lambda: PassageRef("source", "chapter", "   ", 1),
+    ],
+)
+def test_whitespace_only_ids_raise_value_error(factory: object) -> None:
     with pytest.raises(ValueError):
         factory()
 
