@@ -101,7 +101,7 @@ uv run python tools/smoke_openai_compatible_extraction.py --base-url https://api
 
 The current project does not yet include:
 
-- Actual LLM extraction calls.
+- Automated, batch, or benchmarked LLM extraction workflows.
 - Provider SDK dependencies.
 - A graph database.
 - Vector search.
