@@ -122,6 +122,9 @@ def _build_system_prompt() -> str:
             "",
             f"Valid event_type values: {event_values}",
             f"Valid relationship_type values: {relationship_values}",
+            "Your final visible assistant message content must contain the JSON object.",
+            "Do not put the JSON only in reasoning, thinking, analysis, or hidden fields.",
+            "The final visible content must start with { and end with }.",
         ),
     )
 
