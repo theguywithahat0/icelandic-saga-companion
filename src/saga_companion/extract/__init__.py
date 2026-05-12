@@ -26,6 +26,14 @@ from saga_companion.extract.prompts import (
     expected_extraction_json_shape,
     relationship_type_values,
 )
+from saga_companion.extract.providers import (
+    ManualExtractionClient,
+    ProviderConfig,
+    ProviderName,
+    ProviderNotConfiguredError,
+    build_extraction_client,
+    provider_config_from_env,
+)
 from saga_companion.extract.runner import (
     ExtractionModelClient,
     ExtractionResult,
@@ -57,9 +65,14 @@ __all__ = [
     "ExtractedPerson",
     "ExtractedPlace",
     "ExtractedRelationship",
+    "ManualExtractionClient",
     "PassageExtraction",
+    "ProviderConfig",
+    "ProviderName",
+    "ProviderNotConfiguredError",
     "RelationshipType",
     "build_passage_extraction_prompt",
+    "build_extraction_client",
     "event_from_dict",
     "event_type_values",
     "event_to_dict",
@@ -77,6 +90,7 @@ __all__ = [
     "person_to_dict",
     "place_from_dict",
     "place_to_dict",
+    "provider_config_from_env",
     "relationship_from_dict",
     "relationship_type_values",
     "relationship_to_dict",
