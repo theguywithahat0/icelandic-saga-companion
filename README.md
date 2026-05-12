@@ -2,15 +2,15 @@
 
 A graph-backed AI companion for Icelandic sagas, focused on characters, relationships, places, events, and cited answers from saga texts.
 
-The project is moving from a notebook prototype into a tested Python package. The current implementation focuses on ingestion, canonical provenance schemas, and typed contracts for future extraction work.
+The project is moving from a notebook prototype into a tested Python package. The current implementation focuses on ingestion, canonical provenance schemas, and scaffolding for future extraction work.
 
 The legacy capstone notebook is preserved at `notebooks/legacy_capstone.ipynb`.
 
 ## Current Status
 
-Phase 1 ingestion is implemented. Phase 2 canonical schemas and provenance contracts are implemented.
+Phase 1 ingestion is implemented. Phase 2 canonical schemas and provenance contracts are implemented. Phase 3 extraction scaffolding is implemented.
 
-Actual model-based AI extraction, graph modeling, retrieval, and companion behavior are planned but not implemented yet.
+Real model-backed extraction and API/provider clients are still not implemented. Graph modeling, retrieval, and companion behavior are also planned but not implemented yet.
 
 ## What Works Now
 
@@ -26,6 +26,11 @@ Actual model-based AI extraction, graph modeling, retrieval, and companion behav
 - Canonicalization from ingestion outputs.
 - Extraction schema contracts for people, places, events, relationships, and evidence.
 - Extraction JSON/dict adapters for future model output validation.
+- Extraction prompt construction from canonical passages.
+- Deterministic expected extraction JSON shape.
+- Strict extraction response parsing and validation for raw JSON strings.
+- Model-agnostic extraction runner using a client protocol.
+- Fake-client tested extraction flow.
 - Development workflow with uv, pytest, and Ruff.
 
 ## Data Sources
@@ -38,12 +43,12 @@ Plain-text ingestion remains available for compatibility and simpler local exper
 
 - `ingest`: implemented. Loads plain text and SagaDB XML, splits chapters, and chunks passages.
 - Root schema/canonicalization modules: implemented. Define shared source/provenance records and convert ingestion outputs into canonical records.
-- `extract`: partially implemented. Schemas and JSON/dict adapters exist, but no model extraction is implemented yet.
+- `extract`: partially implemented. Schemas, JSON/dict adapters, prompt construction, response parsing, and a model-agnostic runner exist. No real model provider or client exists yet.
 - `graph`: placeholder. Intended for future entity and relationship modeling.
 - `retrieval`: placeholder. Intended for future cited passage lookup and answer grounding.
 - `companion`: placeholder. Intended for future user-facing companion orchestration.
 
-Only ingestion, canonical schemas, canonicalization, and extraction contracts/adapters have real implementation at this stage.
+Only ingestion, canonical schemas, canonicalization, and extraction scaffolding have real implementation at this stage.
 
 ## Development
 
@@ -67,8 +72,9 @@ uv run ruff check .
 
 ## Roadmap
 
-- Model-backed extraction from canonical passages.
-- Extraction prompt and versioning layer.
+- Real provider adapters, such as Gemini or OpenAI, behind the model client protocol.
+- Extraction prompt versioning and fixtures.
+- Batch extraction workflow.
 - Entity resolution.
 - Graph modeling.
 - Retrieval and cited answers.
@@ -79,6 +85,7 @@ uv run ruff check .
 The current project does not yet include:
 
 - Actual LLM extraction calls.
+- Provider SDK dependencies.
 - A graph database.
 - Vector search.
 - A web app.
