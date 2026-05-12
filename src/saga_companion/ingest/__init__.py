@@ -6,6 +6,13 @@ from saga_companion.ingest.load_sagas import (
     load_saga_directory,
     load_saga_file,
 )
+from saga_companion.ingest.load_xml import (
+    SagaXmlChapter,
+    SagaXmlMetadata,
+    SagaXmlText,
+    load_saga_xml_directory,
+    load_saga_xml_file,
+)
 from saga_companion.ingest.pipeline import (
     IngestedSaga,
     ingest_saga_directory,
@@ -18,11 +25,16 @@ __all__ = [
     "IngestedSaga",
     "Passage",
     "SagaText",
+    "SagaXmlChapter",
+    "SagaXmlMetadata",
+    "SagaXmlText",
     "chunk_chapter",
     "chunk_chapters",
     "ingest_saga_directory",
     "ingest_saga_file",
     "load_saga_directory",
     "load_saga_file",
+    "load_saga_xml_directory",
+    "load_saga_xml_file",
     "split_into_chapters",
 ]
