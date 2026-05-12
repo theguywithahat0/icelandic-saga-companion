@@ -87,6 +87,17 @@ def test_prompt_tells_model_not_to_invent_missing_information() -> None:
     assert "Do not invent missing information." in prompt.system
 
 
+def test_prompt_includes_event_relationship_duplication_rules() -> None:
+    prompt = build_passage_extraction_prompt(_passage())
+
+    assert "travel event" in prompt.system
+    assert "travels_to relationship" in prompt.system
+    assert "killing event" in prompt.system
+    assert "kills relationship" in prompt.system
+    assert "marriage event" in prompt.system
+    assert "marriage relationship" in prompt.system
+
+
 def test_helper_enum_value_functions_return_enum_value_strings() -> None:
     assert event_type_values() == tuple(event_type.value for event_type in EventType)
     assert relationship_type_values() == tuple(
