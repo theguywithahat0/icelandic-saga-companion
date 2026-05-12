@@ -19,6 +19,10 @@ from saga_companion.extract.parser import (
     extract_json_object,
     parse_passage_extraction_response,
 )
+from saga_companion.extract.openai_compatible import (
+    OpenAICompatibleExtractionClient,
+    ProviderResponseError,
+)
 from saga_companion.extract.prompts import (
     ExtractionPrompt,
     build_passage_extraction_prompt,
@@ -32,6 +36,7 @@ from saga_companion.extract.providers import (
     ProviderName,
     ProviderNotConfiguredError,
     build_extraction_client,
+    openai_compatible_client_from_config,
     provider_config_from_env,
 )
 from saga_companion.extract.runner import (
@@ -66,10 +71,12 @@ __all__ = [
     "ExtractedPlace",
     "ExtractedRelationship",
     "ManualExtractionClient",
+    "OpenAICompatibleExtractionClient",
     "PassageExtraction",
     "ProviderConfig",
     "ProviderName",
     "ProviderNotConfiguredError",
+    "ProviderResponseError",
     "RelationshipType",
     "build_passage_extraction_prompt",
     "build_extraction_client",
@@ -83,6 +90,7 @@ __all__ = [
     "extract_passages",
     "extract_json_object",
     "expected_extraction_json_shape",
+    "openai_compatible_client_from_config",
     "passage_extraction_from_dict",
     "passage_extraction_to_dict",
     "parse_passage_extraction_response",

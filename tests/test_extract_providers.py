@@ -5,6 +5,7 @@ import pytest
 
 from saga_companion.extract import (
     ManualExtractionClient,
+    OpenAICompatibleExtractionClient,
     ProviderConfig,
     ProviderName,
     ProviderNotConfiguredError,
@@ -17,6 +18,7 @@ def test_provider_name_enum_values() -> None:
     assert ProviderName.MANUAL.value == "manual"
     assert ProviderName.GEMINI.value == "gemini"
     assert ProviderName.OPENAI.value == "openai"
+    assert ProviderName.OPENAI_COMPATIBLE.value == "openai_compatible"
 
 
 def test_provider_config_accepts_valid_values() -> None:
@@ -29,6 +31,7 @@ def test_provider_config_accepts_valid_values() -> None:
     assert config.provider is ProviderName.MANUAL
     assert config.model == "manual-model"
     assert config.api_key_env_var == "MANUAL_API_KEY"
+    assert config.base_url is None
 
 
 def test_provider_config_requires_provider_name() -> None:
@@ -47,6 +50,8 @@ def test_provider_config_requires_provider_name() -> None:
         {"model": "   "},
         {"api_key_env_var": ""},
         {"api_key_env_var": "\t"},
+        {"base_url": ""},
+        {"base_url": "   "},
     ],
 )
 def test_provider_config_rejects_empty_optional_text(kwargs: dict[str, str]) -> None:
@@ -66,16 +71,19 @@ def test_provider_config_from_env_reads_model_and_stores_secret_env_var_name(
 ) -> None:
     monkeypatch.setenv("SAGA_MODEL", "future-model")
     monkeypatch.setenv("SAGA_API_KEY", "secret-value")
+    monkeypatch.setenv("SAGA_BASE_URL", "http://localhost:11434/v1")
 
     config = provider_config_from_env(
-        ProviderName.GEMINI,
+        ProviderName.OPENAI_COMPATIBLE,
         model_env_var="SAGA_MODEL",
         api_key_env_var="SAGA_API_KEY",
+        base_url_env_var="SAGA_BASE_URL",
     )
 
-    assert config.provider is ProviderName.GEMINI
+    assert config.provider is ProviderName.OPENAI_COMPATIBLE
     assert config.model == "future-model"
     assert config.api_key_env_var == "SAGA_API_KEY"
+    assert config.base_url == "http://localhost:11434/v1"
     assert config.api_key_env_var != "secret-value"
 
 
@@ -126,6 +134,19 @@ def test_build_extraction_client_returns_manual_client_for_manual_provider() -> 
     )
 
     assert isinstance(client, ManualExtractionClient)
+
+
+def test_build_extraction_client_returns_openai_compatible_client() -> None:
+    client = build_extraction_client(
+        ProviderConfig(
+            provider=ProviderName.OPENAI_COMPATIBLE,
+            model="local-model",
+            api_key_env_var=None,
+            base_url="http://localhost:11434/v1",
+        ),
+    )
+
+    assert isinstance(client, OpenAICompatibleExtractionClient)
 
 
 def test_build_extraction_client_raises_for_gemini() -> None:
