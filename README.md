@@ -10,7 +10,7 @@ The legacy capstone notebook is preserved at `notebooks/legacy_capstone.ipynb`.
 
 Phase 1 ingestion is implemented. Phase 2 canonical schemas and provenance contracts are implemented. Phase 3 extraction scaffolding is implemented.
 
-Real model-backed extraction workflows are still not implemented. An OpenAI-compatible HTTP provider client exists for manual testing when configured, but benchmarked extraction, graph modeling, retrieval, and companion behavior are planned and not implemented yet.
+Real model-backed extraction workflows are still not implemented. An OpenAI-compatible HTTP provider client exists for manual testing when configured, but automated/batch extraction, graph modeling, retrieval, and companion behavior are planned and not implemented yet. No model benchmark results are included yet.
 
 ## What Works Now
 
@@ -45,7 +45,7 @@ Plain-text ingestion remains available for compatibility and simpler local exper
 
 - `ingest`: implemented. Loads plain text and SagaDB XML, splits chapters, and chunks passages.
 - Root schema/canonicalization modules: implemented. Define shared source/provenance records and convert ingestion outputs into canonical records.
-- `extract`: partially implemented. Schemas, JSON/dict adapters, prompt construction, response parsing, a model-agnostic runner, and an OpenAI-compatible HTTP provider client exist. No Gemini provider, provider SDK dependency, or benchmarked extraction workflow exists yet.
+- `extract`: partially implemented. Schemas, JSON/dict adapters, prompt construction, response parsing, a model-agnostic runner, and an OpenAI-compatible HTTP provider client exist. No Gemini provider, provider SDK dependency, automated benchmark workflow, or benchmark results exist yet.
 - `graph`: placeholder. Intended for future entity and relationship modeling.
 - `retrieval`: placeholder. Intended for future cited passage lookup and answer grounding.
 - `companion`: placeholder. Intended for future user-facing companion orchestration.
@@ -92,13 +92,30 @@ uv run python tools/smoke_openai_compatible_extraction.py --base-url https://api
 
 Benchmark fixture and scoring scaffolding exists for evaluating extraction quality from already-parsed results. A tiny synthetic fixture is included for tests; these snippets are not claimed as real saga quotations.
 
-There is no live model benchmark runner yet. The next step is a manual benchmark runner for OpenAI-compatible providers such as Ollama, OpenAI, LM Studio, or vLLM-style endpoints.
+The included fixture is intentionally tiny and synthetic; broader fixtures and automated benchmark workflows are still future work.
+
+## Manual Benchmark Runner
+
+An optional manual benchmark runner can target Ollama, local OpenAI-compatible endpoints, OpenAI-compatible cloud APIs, LM Studio, or vLLM-style servers. Normal tests do not call providers. Use `--limit` to control cost while trying models.
+
+For a local endpoint:
+
+```sh
+uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/tiny_extraction_benchmark.json --base-url http://localhost:11434/v1 --model <model> --limit 1
+```
+
+For an OpenAI-compatible cloud endpoint with a bearer token:
+
+```sh
+uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/tiny_extraction_benchmark.json --base-url https://api.openai.com/v1 --model <model> --api-key-env-var OPENAI_API_KEY --limit 1
+```
+
+No model has been benchmarked yet.
 
 ## Roadmap
 
 - Additional provider adapters, such as Gemini, behind the model client protocol.
 - Extraction prompt versioning and fixtures.
-- Manual benchmark runner for OpenAI-compatible providers.
 - Batch extraction workflow.
 - Entity resolution.
 - Graph modeling.
