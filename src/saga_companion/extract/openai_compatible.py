@@ -31,10 +31,16 @@ class OpenAICompatibleExtractionClient:
         self.base_url = base_url
         self._api_key = api_key
         self.timeout_seconds = timeout_seconds
+        self._last_response_debug: dict[str, object] = {}
 
     def generate(self, system: str, user: str) -> str:
         """Return generated extraction text from a chat completions response."""
         request = self._build_request(system=system, user=user)
+        self._last_response_debug = {
+            "endpoint": request.full_url,
+            "status": None,
+            "body_preview": None,
+        }
         try:
             response = urllib.request.urlopen(request, timeout=self.timeout_seconds)
             try:
@@ -45,10 +51,20 @@ class OpenAICompatibleExtractionClient:
                 if close is not None:
                     close()
         except urllib.error.HTTPError as exc:
+            self._last_response_debug = {
+                "endpoint": request.full_url,
+                "status": exc.code,
+                "body_preview": _decode_body_preview(_read_error_body(exc)),
+            }
             raise ProviderResponseError(f"provider HTTP error: {exc.code}") from exc
         except urllib.error.URLError as exc:
             raise ProviderResponseError(f"provider request failed: {exc.reason}") from exc
 
+        self._last_response_debug = {
+            "endpoint": request.full_url,
+            "status": int(status),
+            "body_preview": _decode_body_preview(body),
+        }
         if not 200 <= int(status) < 300:
             raise ProviderResponseError(f"provider returned non-2xx status: {status}")
 
@@ -57,7 +73,13 @@ class OpenAICompatibleExtractionClient:
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise ProviderResponseError("provider returned invalid JSON") from exc
 
-        return _response_content(data)
+        content = _response_content(data)
+        self._last_response_debug["message_content_preview"] = _text_preview(content)
+        return content
+
+    def debug_response(self) -> dict[str, object]:
+        """Return sanitized metadata from the most recent provider response."""
+        return dict(self._last_response_debug)
 
     def _build_request(self, *, system: str, user: str) -> urllib.request.Request:
         payload = {
@@ -107,3 +129,19 @@ def _response_content(data: Any) -> str:
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} must not be empty")
+
+
+def _read_error_body(exc: urllib.error.HTTPError) -> bytes:
+    if exc.fp is None:
+        return b""
+    return exc.fp.read()
+
+
+def _decode_body_preview(body: bytes) -> str:
+    return _text_preview(body.decode("utf-8", errors="replace"))
+
+
+def _text_preview(text: str, limit: int = 4000) -> str:
+    if len(text) <= limit:
+        return text
+    return f"{text[:limit]}..."

@@ -34,6 +34,7 @@ def main(argv: list[str] | None = None) -> int:
             model=args.model,
             api_key_env_var=args.api_key_env_var,
             timeout_seconds=args.timeout_seconds,
+            debug_provider_response=args.debug_provider_response,
             limit=args.limit,
             case_ids=args.case_id,
         )
@@ -57,6 +58,7 @@ def run_benchmark(
     model: str,
     api_key_env_var: str | None = None,
     timeout_seconds: float = 300.0,
+    debug_provider_response: bool = False,
     limit: int | None = None,
     case_ids: list[str] | None = None,
 ) -> dict[str, object]:
@@ -73,20 +75,33 @@ def run_benchmark(
         raise ValueError("no benchmark cases remain after filtering")
 
     api_key = os.environ.get(api_key_env_var) if api_key_env_var is not None else None
-    client = OpenAICompatibleExtractionClient(
+    provider_client = OpenAICompatibleExtractionClient(
         model=model,
         base_url=base_url,
         api_key=api_key,
         timeout_seconds=timeout_seconds,
     )
+    debug_client = _DebugCaptureClient(provider_client)
 
     case_reports: list[dict[str, object]] = []
     scores: list[ExtractionScore] = []
     for case in cases:
-        result = extract_passage(
-            canonical_passage_from_benchmark_case(case),
-            client,
-        )
+        try:
+            result = extract_passage(
+                canonical_passage_from_benchmark_case(case),
+                debug_client,
+            )
+        except (ExtractionParseError, ProviderResponseError):
+            if debug_provider_response:
+                _print_debug_provider_response(
+                    model=model,
+                    base_url=base_url,
+                    timeout_seconds=timeout_seconds,
+                    case_id=case.id,
+                    provider_client=provider_client,
+                    raw_response=debug_client.raw_response,
+                )
+            raise
         score = score_extraction(case.expected, result.extraction)
         scores.append(score)
         case_reports.append(
@@ -133,6 +148,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--model", required=True)
     parser.add_argument("--api-key-env-var")
     parser.add_argument("--timeout-seconds", type=_positive_float, default=300.0)
+    parser.add_argument("--debug-provider-response", action="store_true")
     parser.add_argument("--limit", type=_positive_int)
     parser.add_argument("--case-id", action="append")
     return parser.parse_args(argv)
@@ -165,6 +181,51 @@ def _filtered_cases(
     if limit is not None:
         selected = selected[:limit]
     return selected
+
+
+class _DebugCaptureClient:
+    def __init__(self, client: object) -> None:
+        self._client = client
+        self.raw_response: str | None = None
+
+    def generate(self, system: str, user: str) -> str:
+        self.raw_response = self._client.generate(system=system, user=user)
+        return self.raw_response
+
+    def __getattr__(self, name: str) -> object:
+        return getattr(self._client, name)
+
+
+def _print_debug_provider_response(
+    *,
+    model: str,
+    base_url: str,
+    timeout_seconds: float,
+    case_id: str,
+    provider_client: object,
+    raw_response: str | None,
+) -> None:
+    print("provider debug:", file=sys.stderr)
+    print(f"  case_id: {case_id}", file=sys.stderr)
+    print(f"  model: {model}", file=sys.stderr)
+    print(f"  base_url: {base_url}", file=sys.stderr)
+    print(f"  timeout_seconds: {timeout_seconds}", file=sys.stderr)
+    if raw_response is not None:
+        print("  raw_response_preview:", file=sys.stderr)
+        print(_preview(raw_response), file=sys.stderr)
+    debug_response = getattr(provider_client, "debug_response", None)
+    if callable(debug_response):
+        print("  provider_response:", file=sys.stderr)
+        print(
+            json.dumps(debug_response(), indent=2, sort_keys=True),
+            file=sys.stderr,
+        )
+
+
+def _preview(text: str, limit: int = 4000) -> str:
+    if len(text) <= limit:
+        return text
+    return f"{text[:limit]}..."
 
 
 if __name__ == "__main__":

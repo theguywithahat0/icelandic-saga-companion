@@ -225,6 +225,59 @@ def test_smoke_script_does_not_print_api_key(
     assert "secret-value" not in captured.err
 
 
+def test_smoke_script_debug_prints_raw_response_on_parser_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class FencedResponseClient:
+        def __init__(
+            self,
+            *,
+            model: str,
+            base_url: str,
+            api_key: str | None = None,
+            timeout_seconds: float = 300.0,
+        ) -> None:
+            self.model = model
+            self.base_url = base_url
+            self.api_key = api_key
+            self.timeout_seconds = timeout_seconds
+
+        def generate(self, system: str, user: str) -> str:
+            return "```json\n{}\n```"
+
+        def debug_response(self) -> dict[str, object]:
+            return {"status": 200, "body_preview": "provider body"}
+
+    monkeypatch.setattr(
+        smoke_script,
+        "OpenAICompatibleExtractionClient",
+        FencedResponseClient,
+    )
+
+    exit_code = smoke_script.main(
+        [
+            "--base-url",
+            "http://localhost:11434/v1",
+            "--model",
+            "local-model",
+            "--api-key-env-var",
+            "SAGA_API_KEY",
+            "--passage-text",
+            "Egil sailed to Iceland.",
+            "--debug-provider-response",
+        ],
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "provider debug:" in captured.err
+    assert "raw_response_preview" in captured.err
+    assert "```json" in captured.err
+    assert "provider body" in captured.err
+    assert "SAGA_API_KEY" not in captured.err
+
+
 def test_smoke_script_uses_no_provider_sdk_imports() -> None:
     tree = ast.parse(_script_source())
 

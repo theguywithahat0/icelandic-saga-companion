@@ -1,4 +1,5 @@
 import ast
+from io import BytesIO
 import json
 from pathlib import Path
 import urllib.error
@@ -141,6 +142,60 @@ def test_openai_compatible_client_raises_on_invalid_json(
 
     with pytest.raises(ProviderResponseError, match="invalid JSON"):
         client.generate(system="system", user="user")
+
+    debug = client.debug_response()
+    assert debug["status"] == 200
+    assert debug["body_preview"] == "not json"
+    assert "authorization" not in json.dumps(debug).casefold()
+
+
+def test_openai_compatible_client_exposes_sanitized_success_debug(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_urlopen(request: urllib.request.Request, timeout: float) -> FakeResponse:
+        return _response({"choices": [{"message": {"content": "raw extraction"}}]})
+
+    monkeypatch.setattr(openai_compatible.urllib.request, "urlopen", fake_urlopen)
+    client = OpenAICompatibleExtractionClient(
+        model="model",
+        base_url="http://example.test/v1",
+        api_key="secret-key",
+    )
+
+    client.generate(system="system", user="user")
+
+    debug = client.debug_response()
+    debug_text = json.dumps(debug)
+    assert debug["endpoint"] == "http://example.test/v1/chat/completions"
+    assert debug["status"] == 200
+    assert debug["message_content_preview"] == "raw extraction"
+    assert "secret-key" not in debug_text
+
+
+def test_openai_compatible_client_exposes_http_error_debug(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_urlopen(
+        request: urllib.request.Request,
+        timeout: float,
+    ) -> FakeResponse:
+        raise urllib.error.HTTPError(
+            url=request.full_url,
+            code=500,
+            msg="server error",
+            hdrs={},
+            fp=BytesIO(b'{"error": "bad"}'),
+        )
+
+    monkeypatch.setattr(openai_compatible.urllib.request, "urlopen", fake_urlopen)
+    client = OpenAICompatibleExtractionClient(model="model", base_url="http://example.test/v1")
+
+    with pytest.raises(ProviderResponseError):
+        client.generate(system="system", user="user")
+
+    debug = client.debug_response()
+    assert debug["status"] == 500
+    assert debug["body_preview"] == '{"error": "bad"}'
 
 
 @pytest.mark.parametrize(

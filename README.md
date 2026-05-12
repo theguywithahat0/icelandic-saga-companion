@@ -88,6 +88,8 @@ For an endpoint that needs a bearer token, pass the environment variable name:
 uv run python tools/smoke_openai_compatible_extraction.py --base-url https://api.example.com/v1 --model <model> --api-key-env-var OPENAI_API_KEY --passage-text "Egil sailed to Iceland."
 ```
 
+If a provider response fails parsing, add `--debug-provider-response` to print sanitized provider metadata and raw response previews to stderr. API key values are not printed.
+
 ## Benchmark Fixtures
 
 Benchmark fixture and scoring scaffolding exists for evaluating extraction quality from already-parsed results. A tiny synthetic fixture is included for tests; these snippets are not claimed as real saga quotations.
@@ -111,6 +113,8 @@ uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fi
 ```
 
 No model has been benchmarked yet.
+
+If a provider response fails parsing, add `--debug-provider-response` to print sanitized provider metadata, case id, and raw response previews to stderr. API key values are not printed.
 
 ## Roadmap
 
