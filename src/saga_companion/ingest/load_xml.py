@@ -29,11 +29,21 @@ class SagaXmlMetadata:
 
 
 @dataclass(frozen=True)
+class SagaXmlBlock:
+    """An ordered text block parsed from a SagaDB XML chapter."""
+
+    kind: str
+    text: str
+    lines: list[str]
+
+
+@dataclass(frozen=True)
 class SagaXmlChapter:
     """A chapter parsed from SagaDB XML content."""
 
     number: str
     title: str | None
+    blocks: list[SagaXmlBlock]
     paragraphs: list[str]
     text: str
     character_count: int
@@ -137,22 +147,54 @@ def _parse_chapters(content_element: ET.Element | None) -> list[SagaXmlChapter]:
 
 
 def _parse_chapter(chapter_element: ET.Element) -> SagaXmlChapter:
-    paragraphs = [
-        paragraph
-        for paragraph in (
-            _clean_text(paragraph_element.text)
-            for paragraph_element in chapter_element.findall("paragraph")
-        )
-        if paragraph is not None
-    ]
-    text = "\n\n".join(paragraphs)
+    blocks = _parse_chapter_blocks(chapter_element)
+    paragraphs = [block.text for block in blocks if block.kind == "paragraph"]
+    text = "\n\n".join(block.text for block in blocks)
     return SagaXmlChapter(
         number=chapter_element.get("number", ""),
         title=chapter_element.get("title"),
+        blocks=blocks,
         paragraphs=paragraphs,
         text=text,
         character_count=len(text),
     )
+
+
+def _parse_chapter_blocks(chapter_element: ET.Element) -> list[SagaXmlBlock]:
+    blocks: list[SagaXmlBlock] = []
+    for child in list(chapter_element):
+        if child.tag == "paragraph":
+            block = _parse_paragraph_block(child)
+        elif child.tag == "poetry":
+            block = _parse_poetry_block(child)
+        else:
+            block = None
+
+        if block is not None:
+            blocks.append(block)
+
+    return blocks
+
+
+def _parse_paragraph_block(paragraph_element: ET.Element) -> SagaXmlBlock | None:
+    text = _clean_text(paragraph_element.text)
+    if text is None:
+        return None
+    return SagaXmlBlock(kind="paragraph", text=text, lines=[])
+
+
+def _parse_poetry_block(poetry_element: ET.Element) -> SagaXmlBlock | None:
+    lines = [
+        line
+        for line in (
+            _clean_text(line_element.text)
+            for line_element in poetry_element.findall("line")
+        )
+        if line is not None
+    ]
+    if not lines:
+        return None
+    return SagaXmlBlock(kind="poetry", text="\n".join(lines), lines=lines)
 
 
 def _clean_text(value: str | None) -> str | None:

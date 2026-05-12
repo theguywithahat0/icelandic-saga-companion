@@ -7,6 +7,7 @@ from saga_companion.ingest.load_sagas import (
     load_saga_file,
 )
 from saga_companion.ingest.load_xml import (
+    SagaXmlBlock,
     SagaXmlChapter,
     SagaXmlMetadata,
     SagaXmlText,
@@ -25,6 +26,7 @@ __all__ = [
     "IngestedSaga",
     "Passage",
     "SagaText",
+    "SagaXmlBlock",
     "SagaXmlChapter",
     "SagaXmlMetadata",
     "SagaXmlText",
