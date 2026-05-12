@@ -31,6 +31,7 @@ Real model-backed extraction workflows are still not implemented. An OpenAI-comp
 - Strict extraction response parsing and validation for raw JSON strings.
 - Model-agnostic extraction runner using a client protocol.
 - OpenAI-compatible HTTP provider client for manually configured endpoints.
+- Benchmark fixture loading and extraction quality scoring helpers.
 - Fake-client tested extraction flow.
 - Development workflow with uv, pytest, and Ruff.
 
@@ -87,10 +88,17 @@ For an endpoint that needs a bearer token, pass the environment variable name:
 uv run python tools/smoke_openai_compatible_extraction.py --base-url https://api.example.com/v1 --model <model> --api-key-env-var OPENAI_API_KEY --passage-text "Egil sailed to Iceland."
 ```
 
+## Benchmark Fixtures
+
+Benchmark fixture and scoring scaffolding exists for evaluating extraction quality from already-parsed results. A tiny synthetic fixture is included for tests; these snippets are not claimed as real saga quotations.
+
+There is no live model benchmark runner yet. The next step is a manual benchmark runner for OpenAI-compatible providers such as Ollama, OpenAI, LM Studio, or vLLM-style endpoints.
+
 ## Roadmap
 
 - Additional provider adapters, such as Gemini, behind the model client protocol.
 - Extraction prompt versioning and fixtures.
+- Manual benchmark runner for OpenAI-compatible providers.
 - Batch extraction workflow.
 - Entity resolution.
 - Graph modeling.

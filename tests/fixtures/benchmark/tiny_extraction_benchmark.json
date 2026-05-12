@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "id": "egil-simple-travel",
+      "description": "Synthetic simple travel passage.",
+      "passage": {
+        "source_id": "manual-source",
+        "chapter_id": "manual-source:chapter:0001",
+        "passage_id": "manual-source:chapter:0001:passage:0001",
+        "text": "Egil sailed to Iceland."
+      },
+      "expected": {
+        "people": ["Egil"],
+        "places": ["Iceland"],
+        "event_types": ["travel"],
+        "relationship_types": ["travels_to"]
+      }
+    },
+    {
+      "id": "skallagrim-simple-killing",
+      "description": "Synthetic simple killing passage.",
+      "passage": {
+        "source_id": "manual-source",
+        "chapter_id": "manual-source:chapter:0002",
+        "passage_id": "manual-source:chapter:0002:passage:0001",
+        "text": "Skallagrim killed Thorolf."
+      },
+      "expected": {
+        "people": ["Skallagrim", "Thorolf"],
+        "places": [],
+        "event_types": ["killing"],
+        "relationship_types": ["kills"]
+      }
+    },
+    {
+      "id": "gudrun-simple-marriage",
+      "description": "Synthetic simple relationship and place passage.",
+      "passage": {
+        "source_id": "manual-source",
+        "chapter_id": "manual-source:chapter:0003",
+        "passage_id": "manual-source:chapter:0003:passage:0001",
+        "text": "Gudrun married Bolli at Laugar."
+      },
+      "expected": {
+        "people": ["Gudrun", "Bolli"],
+        "places": ["Laugar"],
+        "event_types": ["marriage"],
+        "relationship_types": ["marriage"]
+      }
+    }
+  ]
+}
