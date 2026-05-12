@@ -10,7 +10,7 @@ The legacy capstone notebook is preserved at `notebooks/legacy_capstone.ipynb`.
 
 Phase 1 ingestion is implemented. Phase 2 canonical schemas and provenance contracts are implemented. Phase 3 extraction scaffolding is implemented.
 
-Real model-backed extraction and API/provider clients are still not implemented. Graph modeling, retrieval, and companion behavior are also planned but not implemented yet.
+Real model-backed extraction workflows are still not implemented. An OpenAI-compatible HTTP provider client exists for manual testing when configured, but benchmarked extraction, graph modeling, retrieval, and companion behavior are planned and not implemented yet.
 
 ## What Works Now
 
@@ -30,6 +30,7 @@ Real model-backed extraction and API/provider clients are still not implemented.
 - Deterministic expected extraction JSON shape.
 - Strict extraction response parsing and validation for raw JSON strings.
 - Model-agnostic extraction runner using a client protocol.
+- OpenAI-compatible HTTP provider client for manually configured endpoints.
 - Fake-client tested extraction flow.
 - Development workflow with uv, pytest, and Ruff.
 
@@ -43,7 +44,7 @@ Plain-text ingestion remains available for compatibility and simpler local exper
 
 - `ingest`: implemented. Loads plain text and SagaDB XML, splits chapters, and chunks passages.
 - Root schema/canonicalization modules: implemented. Define shared source/provenance records and convert ingestion outputs into canonical records.
-- `extract`: partially implemented. Schemas, JSON/dict adapters, prompt construction, response parsing, and a model-agnostic runner exist. No real model provider or client exists yet.
+- `extract`: partially implemented. Schemas, JSON/dict adapters, prompt construction, response parsing, a model-agnostic runner, and an OpenAI-compatible HTTP provider client exist. No Gemini provider, provider SDK dependency, or benchmarked extraction workflow exists yet.
 - `graph`: placeholder. Intended for future entity and relationship modeling.
 - `retrieval`: placeholder. Intended for future cited passage lookup and answer grounding.
 - `companion`: placeholder. Intended for future user-facing companion orchestration.
@@ -70,9 +71,25 @@ Run lint checks:
 uv run ruff check .
 ```
 
+## Manual Provider Smoke Test
+
+An optional manual smoke script can target OpenAI-compatible endpoints, including local servers such as Ollama, LM Studio, or vLLM-style APIs. It does not run in normal tests and has not been benchmarked.
+
+For a local endpoint:
+
+```sh
+uv run python tools/smoke_openai_compatible_extraction.py --base-url http://localhost:11434/v1 --model <model> --passage-text "Egil sailed to Iceland."
+```
+
+For an endpoint that needs a bearer token, pass the environment variable name:
+
+```sh
+uv run python tools/smoke_openai_compatible_extraction.py --base-url https://api.example.com/v1 --model <model> --api-key-env-var OPENAI_API_KEY --passage-text "Egil sailed to Iceland."
+```
+
 ## Roadmap
 
-- Real provider adapters, such as Gemini or OpenAI, behind the model client protocol.
+- Additional provider adapters, such as Gemini, behind the model client protocol.
 - Extraction prompt versioning and fixtures.
 - Batch extraction workflow.
 - Entity resolution.
