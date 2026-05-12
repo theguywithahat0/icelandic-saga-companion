@@ -1,1 +1,53 @@
 """Entity and relationship extraction interfaces."""
+
+from saga_companion.extract.adapters import (
+    event_from_dict,
+    event_to_dict,
+    evidence_from_dict,
+    evidence_to_dict,
+    passage_extraction_from_dict,
+    passage_extraction_to_dict,
+    person_from_dict,
+    person_to_dict,
+    place_from_dict,
+    place_to_dict,
+    relationship_from_dict,
+    relationship_to_dict,
+)
+from saga_companion.extract.schemas import (
+    EventType,
+    EvidenceRef,
+    ExtractedEntityType,
+    ExtractedEvent,
+    ExtractedPerson,
+    ExtractedPlace,
+    ExtractedRelationship,
+    PassageExtraction,
+    RelationshipType,
+    empty_passage_extraction,
+)
+
+__all__ = [
+    "EventType",
+    "EvidenceRef",
+    "ExtractedEntityType",
+    "ExtractedEvent",
+    "ExtractedPerson",
+    "ExtractedPlace",
+    "ExtractedRelationship",
+    "PassageExtraction",
+    "RelationshipType",
+    "event_from_dict",
+    "event_to_dict",
+    "evidence_from_dict",
+    "evidence_to_dict",
+    "empty_passage_extraction",
+    "passage_extraction_from_dict",
+    "passage_extraction_to_dict",
+    "person_from_dict",
+    "person_to_dict",
+    "place_from_dict",
+    "place_to_dict",
+    "relationship_from_dict",
+    "relationship_to_dict",
+]
