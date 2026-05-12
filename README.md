@@ -92,13 +92,30 @@ uv run python tools/smoke_openai_compatible_extraction.py --base-url https://api
 
 Benchmark fixture and scoring scaffolding exists for evaluating extraction quality from already-parsed results. A tiny synthetic fixture is included for tests; these snippets are not claimed as real saga quotations.
 
-There is no live model benchmark runner yet. The next step is a manual benchmark runner for OpenAI-compatible providers such as Ollama, OpenAI, LM Studio, or vLLM-style endpoints.
+The included fixture is intentionally tiny and synthetic; broader fixtures and automated benchmark workflows are still future work.
+
+## Manual Benchmark Runner
+
+An optional manual benchmark runner can target Ollama, local OpenAI-compatible endpoints, OpenAI-compatible cloud APIs, LM Studio, or vLLM-style servers. Normal tests do not call providers. Use `--limit` to control cost while trying models.
+
+For a local endpoint:
+
+```sh
+uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/tiny_extraction_benchmark.json --base-url http://localhost:11434/v1 --model <model> --limit 1
+```
+
+For an OpenAI-compatible cloud endpoint with a bearer token:
+
+```sh
+uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/tiny_extraction_benchmark.json --base-url https://api.openai.com/v1 --model <model> --api-key-env-var OPENAI_API_KEY --limit 1
+```
+
+No model has been benchmarked yet.
 
 ## Roadmap
 
 - Additional provider adapters, such as Gemini, behind the model client protocol.
 - Extraction prompt versioning and fixtures.
-- Manual benchmark runner for OpenAI-compatible providers.
 - Batch extraction workflow.
 - Entity resolution.
 - Graph modeling.
