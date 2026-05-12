@@ -47,7 +47,12 @@ def test_smoke_script_outputs_parsed_extraction_json(
         clients.append(client)
         return client
 
-    def fake_extract_passage(passage: object, client: FakeClient) -> object:
+    def fake_extract_passage(
+        passage: object,
+        client: FakeClient,
+        *,
+        allow_markdown_json: bool = False,
+    ) -> object:
         return SimpleNamespace(extraction=empty_passage_extraction("passage-1"))
 
     monkeypatch.setattr(smoke_script, "OpenAICompatibleExtractionClient", fake_client_factory)
@@ -90,7 +95,12 @@ def test_smoke_script_reads_passage_file(
     passage_file.write_text("Egil met Arinbjorn.", encoding="utf-8")
     seen_text: list[str] = []
 
-    def fake_extract_passage(passage: object, client: FakeClient) -> object:
+    def fake_extract_passage(
+        passage: object,
+        client: FakeClient,
+        *,
+        allow_markdown_json: bool = False,
+    ) -> object:
         seen_text.append(passage.text)
         return SimpleNamespace(extraction=empty_passage_extraction(passage.ref.passage_id))
 
@@ -137,7 +147,7 @@ def test_smoke_script_defaults_timeout_to_300_seconds(
     monkeypatch.setattr(
         smoke_script,
         "extract_passage",
-        lambda passage, client: SimpleNamespace(
+        lambda passage, client, allow_markdown_json=False: SimpleNamespace(
             extraction=empty_passage_extraction(passage.ref.passage_id),
         ),
     )
@@ -199,7 +209,12 @@ def test_smoke_script_does_not_print_api_key(
 ) -> None:
     monkeypatch.setenv("SAGA_API_KEY", "secret-value")
 
-    def fake_extract_passage(passage: object, client: FakeClient) -> object:
+    def fake_extract_passage(
+        passage: object,
+        client: FakeClient,
+        *,
+        allow_markdown_json: bool = False,
+    ) -> object:
         assert client.api_key == "secret-value"
         return SimpleNamespace(extraction=empty_passage_extraction(passage.ref.passage_id))
 
@@ -276,6 +291,50 @@ def test_smoke_script_debug_prints_raw_response_on_parser_failure(
     assert "```json" in captured.err
     assert "provider body" in captured.err
     assert "SAGA_API_KEY" not in captured.err
+
+
+def test_smoke_script_accepts_fenced_json_when_allowed(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class FencedResponseClient:
+        def __init__(
+            self,
+            *,
+            model: str,
+            base_url: str,
+            api_key: str | None = None,
+            timeout_seconds: float = 300.0,
+        ) -> None:
+            self.model = model
+            self.base_url = base_url
+            self.api_key = api_key
+            self.timeout_seconds = timeout_seconds
+
+        def generate(self, system: str, user: str) -> str:
+            return '```json\n{"passage_id":"manual-source:chapter:0001:passage:0001","people":[],"places":[],"events":[],"relationships":[]}\n```'
+
+    monkeypatch.setattr(
+        smoke_script,
+        "OpenAICompatibleExtractionClient",
+        FencedResponseClient,
+    )
+
+    exit_code = smoke_script.main(
+        [
+            "--base-url",
+            "http://localhost:11434/v1",
+            "--model",
+            "local-model",
+            "--passage-text",
+            "Egil sailed to Iceland.",
+            "--allow-markdown-json",
+        ],
+    )
+
+    output = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert output["passage_id"] == "manual-source:chapter:0001:passage:0001"
 
 
 def test_smoke_script_uses_no_provider_sdk_imports() -> None:

@@ -9,6 +9,7 @@ from saga_companion.extract import (
     RelationshipType,
     parse_passage_extraction_response,
 )
+from saga_companion.extract.parser import strip_single_json_markdown_fence
 
 
 def test_valid_json_response_parses_to_passage_extraction() -> None:
@@ -71,6 +72,36 @@ def test_parser_does_not_silently_strip_markdown_code_fences_yet() -> None:
 
     with pytest.raises(ExtractionParseError, match="invalid JSON"):
         parse_passage_extraction_response(raw_response)
+
+
+def test_parser_accepts_json_fence_when_allowed() -> None:
+    raw_response = f"```json\n{_valid_response()}\n```"
+
+    extraction = parse_passage_extraction_response(
+        raw_response,
+        allow_markdown_json=True,
+    )
+
+    assert extraction.passage_id == "passage"
+
+
+def test_parser_accepts_plain_fence_when_allowed() -> None:
+    raw_response = f"```\n{_valid_response()}\n```"
+
+    extraction = parse_passage_extraction_response(
+        raw_response,
+        allow_markdown_json=True,
+    )
+
+    assert extraction.passage_id == "passage"
+
+
+def test_fence_stripper_does_not_extract_json_from_surrounding_prose() -> None:
+    raw_response = f"Here is JSON:\n```json\n{_valid_response()}\n```"
+
+    assert strip_single_json_markdown_fence(raw_response) == raw_response.strip()
+    with pytest.raises(ExtractionParseError, match="invalid JSON"):
+        parse_passage_extraction_response(raw_response, allow_markdown_json=True)
 
 
 def test_parser_uses_stdlib_only_and_no_model_sdk_imports() -> None:

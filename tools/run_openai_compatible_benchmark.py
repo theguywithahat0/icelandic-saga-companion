@@ -17,11 +17,14 @@ from saga_companion.benchmark import (
 )
 from saga_companion.extract import (
     ExtractionParseError,
+    ExtractionResult,
     OpenAICompatibleExtractionClient,
     ProviderResponseError,
-    extract_passage,
+    build_passage_extraction_prompt,
     passage_extraction_to_dict,
+    parse_passage_extraction_response,
 )
+from saga_companion.schemas import CanonicalPassage
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -35,6 +38,7 @@ def main(argv: list[str] | None = None) -> int:
             api_key_env_var=args.api_key_env_var,
             timeout_seconds=args.timeout_seconds,
             debug_provider_response=args.debug_provider_response,
+            allow_markdown_json=args.allow_markdown_json,
             limit=args.limit,
             case_ids=args.case_id,
         )
@@ -59,6 +63,7 @@ def run_benchmark(
     api_key_env_var: str | None = None,
     timeout_seconds: float = 300.0,
     debug_provider_response: bool = False,
+    allow_markdown_json: bool = False,
     limit: int | None = None,
     case_ids: list[str] | None = None,
 ) -> dict[str, object]:
@@ -90,6 +95,7 @@ def run_benchmark(
             result = extract_passage(
                 canonical_passage_from_benchmark_case(case),
                 debug_client,
+                allow_markdown_json=allow_markdown_json,
             )
         except (ExtractionParseError, ProviderResponseError):
             if debug_provider_response:
@@ -149,6 +155,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--api-key-env-var")
     parser.add_argument("--timeout-seconds", type=_positive_float, default=300.0)
     parser.add_argument("--debug-provider-response", action="store_true")
+    parser.add_argument("--allow-markdown-json", action="store_true")
     parser.add_argument("--limit", type=_positive_int)
     parser.add_argument("--case-id", action="append")
     return parser.parse_args(argv)
@@ -194,6 +201,26 @@ class _DebugCaptureClient:
 
     def __getattr__(self, name: str) -> object:
         return getattr(self._client, name)
+
+
+def extract_passage(
+    passage: CanonicalPassage,
+    client: _DebugCaptureClient,
+    *,
+    allow_markdown_json: bool,
+) -> ExtractionResult:
+    prompt = build_passage_extraction_prompt(passage)
+    raw_response = client.generate(system=prompt.system, user=prompt.user)
+    extraction = parse_passage_extraction_response(
+        raw_response,
+        allow_markdown_json=allow_markdown_json,
+    )
+    return ExtractionResult(
+        passage=passage,
+        prompt=prompt,
+        raw_response=raw_response,
+        extraction=extraction,
+    )
 
 
 def _print_debug_provider_response(

@@ -390,6 +390,65 @@ def test_benchmark_runner_debug_prints_case_and_raw_response_on_parser_failure(
     assert "SAGA_API_KEY" not in captured.err
 
 
+def test_benchmark_runner_accepts_fenced_json_when_allowed(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class FencedResponseClient:
+        def __init__(
+            self,
+            *,
+            model: str,
+            base_url: str,
+            api_key: str | None = None,
+            timeout_seconds: float = 300.0,
+        ) -> None:
+            self.model = model
+            self.base_url = base_url
+            self.api_key = api_key
+            self.timeout_seconds = timeout_seconds
+
+        def generate(self, system: str, user: str) -> str:
+            return """
+```json
+{
+  "passage_id": "manual-source:chapter:0001:passage:0001",
+  "people": [],
+  "places": [],
+  "events": [],
+  "relationships": []
+}
+```
+""".strip()
+
+    monkeypatch.setattr(
+        benchmark_script,
+        "OpenAICompatibleExtractionClient",
+        FencedResponseClient,
+    )
+
+    exit_code = benchmark_script.main(
+        [
+            "--benchmark-file",
+            str(_fixture_path()),
+            "--base-url",
+            "http://localhost:11434/v1",
+            "--model",
+            "local-model",
+            "--limit",
+            "1",
+            "--allow-markdown-json",
+        ],
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert report["case_count"] == 1
+    assert report["cases"][0]["extraction"]["passage_id"] == (
+        "manual-source:chapter:0001:passage:0001"
+    )
+
+
 def test_benchmark_runner_uses_no_provider_sdk_imports() -> None:
     tree = ast.parse(_script_source())
 
@@ -425,7 +484,12 @@ def _patch_provider(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(benchmark_script, "extract_passage", _fake_extract_passage)
 
 
-def _fake_extract_passage(passage: object, client: FakeClient) -> object:
+def _fake_extract_passage(
+    passage: object,
+    client: FakeClient,
+    *,
+    allow_markdown_json: bool = False,
+) -> object:
     if passage.ref.passage_id.endswith("0001:passage:0001"):
         extraction = _travel_extraction(passage.ref.passage_id)
     elif passage.ref.passage_id.endswith("0002:passage:0001"):

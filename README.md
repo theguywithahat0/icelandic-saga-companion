@@ -90,6 +90,8 @@ uv run python tools/smoke_openai_compatible_extraction.py --base-url https://api
 
 If a provider response fails parsing, add `--debug-provider-response` to print sanitized provider metadata and raw response previews to stderr. API key values are not printed.
 
+Some local instruct models, such as Mistral variants, may wrap otherwise valid JSON in a single Markdown code fence. For manual runs only, add `--allow-markdown-json` to accept one whole-response `json` or plain code fence. The default parser remains strict.
+
 ## Benchmark Fixtures
 
 Benchmark fixture and scoring scaffolding exists for evaluating extraction quality from already-parsed results. A tiny synthetic fixture is included for tests; these snippets are not claimed as real saga quotations.
@@ -115,6 +117,8 @@ uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fi
 No model has been benchmarked yet.
 
 If a provider response fails parsing, add `--debug-provider-response` to print sanitized provider metadata, case id, and raw response previews to stderr. API key values are not printed.
+
+For local instruct models that wrap valid JSON in a single Markdown code fence, add `--allow-markdown-json`. This is opt-in for manual tools only; normal parsing remains strict.
 
 ## Roadmap
 

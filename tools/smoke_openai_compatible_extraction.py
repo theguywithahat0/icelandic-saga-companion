@@ -10,10 +10,12 @@ import sys
 
 from saga_companion.extract import (
     ExtractionParseError,
+    ExtractionResult,
     OpenAICompatibleExtractionClient,
     ProviderResponseError,
-    extract_passage,
+    build_passage_extraction_prompt,
     passage_extraction_to_dict,
+    parse_passage_extraction_response,
 )
 from saga_companion.schemas import CanonicalPassage, PassageRef
 
@@ -41,7 +43,11 @@ def main(argv: list[str] | None = None) -> int:
             timeout_seconds=args.timeout_seconds,
         )
         debug_client = _DebugCaptureClient(provider_client)
-        result = extract_passage(passage, debug_client)
+        result = extract_passage(
+            passage,
+            debug_client,
+            allow_markdown_json=args.allow_markdown_json,
+        )
         print(
             json.dumps(
                 passage_extraction_to_dict(result.extraction),
@@ -74,6 +80,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--api-key-env-var")
     parser.add_argument("--timeout-seconds", type=_positive_float, default=300.0)
     parser.add_argument("--debug-provider-response", action="store_true")
+    parser.add_argument("--allow-markdown-json", action="store_true")
     parser.add_argument("--source-id", default="manual-source")
     parser.add_argument("--chapter-id", default="manual-source:chapter:0001")
     parser.add_argument(
@@ -130,6 +137,26 @@ class _DebugCaptureClient:
 
     def __getattr__(self, name: str) -> object:
         return getattr(self._client, name)
+
+
+def extract_passage(
+    passage: CanonicalPassage,
+    client: _DebugCaptureClient,
+    *,
+    allow_markdown_json: bool,
+) -> ExtractionResult:
+    prompt = build_passage_extraction_prompt(passage)
+    raw_response = client.generate(system=prompt.system, user=prompt.user)
+    extraction = parse_passage_extraction_response(
+        raw_response,
+        allow_markdown_json=allow_markdown_json,
+    )
+    return ExtractionResult(
+        passage=passage,
+        prompt=prompt,
+        raw_response=raw_response,
+        extraction=extraction,
+    )
 
 
 def _print_debug_provider_response(

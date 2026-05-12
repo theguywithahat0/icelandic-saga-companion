@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from saga_companion.extract.adapters import passage_extraction_from_dict
@@ -13,9 +14,15 @@ class ExtractionParseError(ValueError):
     """Raised when a raw extraction response cannot be parsed or validated."""
 
 
-def parse_passage_extraction_response(raw_response: str) -> PassageExtraction:
+def parse_passage_extraction_response(
+    raw_response: str,
+    *,
+    allow_markdown_json: bool = False,
+) -> PassageExtraction:
     """Parse and validate a raw JSON extraction response."""
     json_text = extract_json_object(raw_response)
+    if allow_markdown_json:
+        json_text = strip_single_json_markdown_fence(json_text)
     if not json_text:
         raise ExtractionParseError("extraction response is empty")
 
@@ -41,3 +48,16 @@ def extract_json_object(raw_response: str) -> str:
     be added at this boundary without changing the typed schema adapters.
     """
     return raw_response.strip()
+
+
+def strip_single_json_markdown_fence(raw_response: str) -> str:
+    """Strip one whole-response Markdown JSON fence if present."""
+    stripped = raw_response.strip()
+    match = re.fullmatch(
+        r"```(?:json)?[ \t]*\r?\n(?P<content>.*?)\r?\n```",
+        stripped,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+    if match is None:
+        return stripped
+    return match.group("content").strip()
