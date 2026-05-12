@@ -29,7 +29,7 @@ class OpenAICompatibleExtractionClient:
 
         self.model = model
         self.base_url = base_url
-        self.api_key = api_key
+        self._api_key = api_key
         self.timeout_seconds = timeout_seconds
 
     def generate(self, system: str, user: str) -> str:
@@ -69,8 +69,8 @@ class OpenAICompatibleExtractionClient:
             "temperature": 0,
         }
         headers = {"Content-Type": "application/json"}
-        if self.api_key is not None:
-            headers["Authorization"] = f"Bearer {self.api_key}"
+        if self._api_key is not None:
+            headers["Authorization"] = f"Bearer {self._api_key}"
         return urllib.request.Request(
             _chat_completions_url(self.base_url),
             data=json.dumps(payload).encode("utf-8"),

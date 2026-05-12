@@ -196,6 +196,13 @@ def test_openai_compatible_client_validates_constructor_values(
 def test_openai_compatible_client_from_config_reads_api_key_secret(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    calls: list[urllib.request.Request] = []
+
+    def fake_urlopen(request: urllib.request.Request, timeout: float) -> FakeResponse:
+        calls.append(request)
+        return _response({"choices": [{"message": {"content": "raw"}}]})
+
+    monkeypatch.setattr(openai_compatible.urllib.request, "urlopen", fake_urlopen)
     monkeypatch.setenv("SAGA_API_KEY", "secret-value")
     config = ProviderConfig(
         provider=ProviderName.OPENAI_COMPATIBLE,
@@ -205,9 +212,10 @@ def test_openai_compatible_client_from_config_reads_api_key_secret(
     )
 
     client = openai_compatible_client_from_config(config)
+    client.generate(system="system", user="user")
 
-    assert client.api_key == "secret-value"
-    assert client.api_key != config.api_key_env_var
+    assert not hasattr(client, "api_key")
+    assert _headers(calls[0])["authorization"] == "Bearer secret-value"
 
 
 def test_build_extraction_client_returns_openai_compatible_client() -> None:
