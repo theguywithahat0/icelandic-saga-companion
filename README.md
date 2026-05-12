@@ -79,7 +79,7 @@ An optional manual smoke script can target OpenAI-compatible endpoints, includin
 For a local endpoint:
 
 ```sh
-uv run python tools/smoke_openai_compatible_extraction.py --base-url http://localhost:11434/v1 --model <model> --passage-text "Egil sailed to Iceland."
+uv run python tools/smoke_openai_compatible_extraction.py --base-url http://localhost:11434/v1 --model <model> --timeout-seconds 300 --passage-text "Egil sailed to Iceland."
 ```
 
 For an endpoint that needs a bearer token, pass the environment variable name:
@@ -101,7 +101,7 @@ An optional manual benchmark runner can target Ollama, local OpenAI-compatible e
 For a local endpoint:
 
 ```sh
-uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/tiny_extraction_benchmark.json --base-url http://localhost:11434/v1 --model <model> --limit 1
+uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/tiny_extraction_benchmark.json --base-url http://localhost:11434/v1 --model <model> --timeout-seconds 300 --limit 1
 ```
 
 For an OpenAI-compatible cloud endpoint with a bearer token:

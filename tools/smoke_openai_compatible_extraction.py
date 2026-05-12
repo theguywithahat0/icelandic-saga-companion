@@ -38,6 +38,7 @@ def main(argv: list[str] | None = None) -> int:
             model=args.model,
             base_url=args.base_url,
             api_key=api_key,
+            timeout_seconds=args.timeout_seconds,
         )
         result = extract_passage(passage, client)
         print(
@@ -60,6 +61,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--api-key-env-var")
+    parser.add_argument("--timeout-seconds", type=_positive_float, default=300.0)
     parser.add_argument("--source-id", default="manual-source")
     parser.add_argument("--chapter-id", default="manual-source:chapter:0001")
     parser.add_argument(
@@ -71,6 +73,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     passage_group.add_argument("--passage-text")
     passage_group.add_argument("--passage-file")
     return parser.parse_args(argv)
+
+
+def _positive_float(value: str) -> float:
+    parsed = float(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("timeout-seconds must be greater than 0")
+    return parsed
 
 
 def _passage_text(args: argparse.Namespace) -> str:

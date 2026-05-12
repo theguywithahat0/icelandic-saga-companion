@@ -33,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
             base_url=args.base_url,
             model=args.model,
             api_key_env_var=args.api_key_env_var,
+            timeout_seconds=args.timeout_seconds,
             limit=args.limit,
             case_ids=args.case_id,
         )
@@ -55,6 +56,7 @@ def run_benchmark(
     base_url: str,
     model: str,
     api_key_env_var: str | None = None,
+    timeout_seconds: float = 300.0,
     limit: int | None = None,
     case_ids: list[str] | None = None,
 ) -> dict[str, object]:
@@ -75,6 +77,7 @@ def run_benchmark(
         model=model,
         base_url=base_url,
         api_key=api_key,
+        timeout_seconds=timeout_seconds,
     )
 
     case_reports: list[dict[str, object]] = []
@@ -129,6 +132,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--api-key-env-var")
+    parser.add_argument("--timeout-seconds", type=_positive_float, default=300.0)
     parser.add_argument("--limit", type=_positive_int)
     parser.add_argument("--case-id", action="append")
     return parser.parse_args(argv)
@@ -138,6 +142,13 @@ def _positive_int(value: str) -> int:
     parsed = int(value)
     if parsed <= 0:
         raise argparse.ArgumentTypeError("limit must be greater than 0")
+    return parsed
+
+
+def _positive_float(value: str) -> float:
+    parsed = float(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("timeout-seconds must be greater than 0")
     return parsed
 
 

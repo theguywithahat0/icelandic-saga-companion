@@ -26,10 +26,12 @@ class FakeClient:
         model: str,
         base_url: str,
         api_key: str | None = None,
+        timeout_seconds: float = 300.0,
     ) -> None:
         self.model = model
         self.base_url = base_url
         self.api_key = api_key
+        self.timeout_seconds = timeout_seconds
 
 
 def test_benchmark_runner_outputs_json_report_shape(
@@ -48,6 +50,8 @@ def test_benchmark_runner_outputs_json_report_shape(
             "local-model",
             "--limit",
             "1",
+            "--timeout-seconds",
+            "42.5",
         ],
     )
 
@@ -133,6 +137,22 @@ def test_benchmark_runner_limit_must_be_positive() -> None:
         )
 
 
+def test_benchmark_runner_timeout_must_be_positive() -> None:
+    with pytest.raises(SystemExit):
+        benchmark_script.main(
+            [
+                "--benchmark-file",
+                str(_fixture_path()),
+                "--base-url",
+                "http://localhost:11434/v1",
+                "--model",
+                "local-model",
+                "--timeout-seconds",
+                "0",
+            ],
+        )
+
+
 def test_benchmark_file_is_loaded(monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_provider(monkeypatch)
     loaded_paths: list[str] = []
@@ -152,6 +172,83 @@ def test_benchmark_file_is_loaded(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
     assert loaded_paths == [str(_fixture_path())]
+
+
+def test_benchmark_runner_passes_timeout_to_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clients: list[FakeClient] = []
+
+    def fake_client_factory(
+        *,
+        model: str,
+        base_url: str,
+        api_key: str | None = None,
+        timeout_seconds: float = 300.0,
+    ) -> FakeClient:
+        client = FakeClient(
+            model=model,
+            base_url=base_url,
+            api_key=api_key,
+            timeout_seconds=timeout_seconds,
+        )
+        clients.append(client)
+        return client
+
+    monkeypatch.setattr(
+        benchmark_script,
+        "OpenAICompatibleExtractionClient",
+        fake_client_factory,
+    )
+    monkeypatch.setattr(benchmark_script, "extract_passage", _fake_extract_passage)
+
+    benchmark_script.run_benchmark(
+        benchmark_file=str(_fixture_path()),
+        base_url="http://localhost:11434/v1",
+        model="local-model",
+        timeout_seconds=42.5,
+        limit=1,
+    )
+
+    assert clients[0].timeout_seconds == 42.5
+
+
+def test_benchmark_runner_defaults_timeout_to_300_seconds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clients: list[FakeClient] = []
+
+    def fake_client_factory(
+        *,
+        model: str,
+        base_url: str,
+        api_key: str | None = None,
+        timeout_seconds: float = 300.0,
+    ) -> FakeClient:
+        client = FakeClient(
+            model=model,
+            base_url=base_url,
+            api_key=api_key,
+            timeout_seconds=timeout_seconds,
+        )
+        clients.append(client)
+        return client
+
+    monkeypatch.setattr(
+        benchmark_script,
+        "OpenAICompatibleExtractionClient",
+        fake_client_factory,
+    )
+    monkeypatch.setattr(benchmark_script, "extract_passage", _fake_extract_passage)
+
+    benchmark_script.run_benchmark(
+        benchmark_file=str(_fixture_path()),
+        base_url="http://localhost:11434/v1",
+        model="local-model",
+        limit=1,
+    )
+
+    assert clients[0].timeout_seconds == 300.0
 
 
 def test_macro_averages_are_computed_correctly() -> None:
@@ -197,8 +294,14 @@ def test_benchmark_runner_does_not_print_api_key(
         model: str,
         base_url: str,
         api_key: str | None = None,
+        timeout_seconds: float = 300.0,
     ) -> FakeClient:
-        client = FakeClient(model=model, base_url=base_url, api_key=api_key)
+        client = FakeClient(
+            model=model,
+            base_url=base_url,
+            api_key=api_key,
+            timeout_seconds=timeout_seconds,
+        )
         clients.append(client)
         return client
 
