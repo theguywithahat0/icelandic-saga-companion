@@ -14,6 +14,13 @@ from saga_companion.extract.adapters import (
     relationship_from_dict,
     relationship_to_dict,
 )
+from saga_companion.extract.prompts import (
+    ExtractionPrompt,
+    build_passage_extraction_prompt,
+    event_type_values,
+    expected_extraction_json_shape,
+    relationship_type_values,
+)
 from saga_companion.extract.schemas import (
     EventType,
     EvidenceRef,
@@ -29,6 +36,7 @@ from saga_companion.extract.schemas import (
 
 __all__ = [
     "EventType",
+    "ExtractionPrompt",
     "EvidenceRef",
     "ExtractedEntityType",
     "ExtractedEvent",
@@ -37,11 +45,14 @@ __all__ = [
     "ExtractedRelationship",
     "PassageExtraction",
     "RelationshipType",
+    "build_passage_extraction_prompt",
     "event_from_dict",
+    "event_type_values",
     "event_to_dict",
     "evidence_from_dict",
     "evidence_to_dict",
     "empty_passage_extraction",
+    "expected_extraction_json_shape",
     "passage_extraction_from_dict",
     "passage_extraction_to_dict",
     "person_from_dict",
@@ -49,5 +60,6 @@ __all__ = [
     "place_from_dict",
     "place_to_dict",
     "relationship_from_dict",
+    "relationship_type_values",
     "relationship_to_dict",
 ]
