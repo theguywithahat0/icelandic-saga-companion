@@ -10,7 +10,7 @@ The legacy capstone notebook is preserved at `notebooks/legacy_capstone.ipynb`.
 
 Phase 1 ingestion is implemented. Phase 2 canonical schemas and provenance contracts are implemented. Phase 3 extraction scaffolding is implemented.
 
-Real model-backed extraction workflows are still not implemented. An OpenAI-compatible HTTP provider client exists for manual testing when configured, but benchmarked extraction, graph modeling, retrieval, and companion behavior are planned and not implemented yet.
+Real model-backed extraction workflows are still not implemented. An OpenAI-compatible HTTP provider client exists for manual testing when configured, but automated/batch extraction, graph modeling, retrieval, and companion behavior are planned and not implemented yet. No model benchmark results are included yet.
 
 ## What Works Now
 
@@ -45,7 +45,7 @@ Plain-text ingestion remains available for compatibility and simpler local exper
 
 - `ingest`: implemented. Loads plain text and SagaDB XML, splits chapters, and chunks passages.
 - Root schema/canonicalization modules: implemented. Define shared source/provenance records and convert ingestion outputs into canonical records.
-- `extract`: partially implemented. Schemas, JSON/dict adapters, prompt construction, response parsing, a model-agnostic runner, and an OpenAI-compatible HTTP provider client exist. No Gemini provider, provider SDK dependency, or benchmarked extraction workflow exists yet.
+- `extract`: partially implemented. Schemas, JSON/dict adapters, prompt construction, response parsing, a model-agnostic runner, and an OpenAI-compatible HTTP provider client exist. No Gemini provider, provider SDK dependency, automated benchmark workflow, or benchmark results exist yet.
 - `graph`: placeholder. Intended for future entity and relationship modeling.
 - `retrieval`: placeholder. Intended for future cited passage lookup and answer grounding.
 - `companion`: placeholder. Intended for future user-facing companion orchestration.
