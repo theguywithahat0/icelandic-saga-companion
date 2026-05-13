@@ -188,6 +188,22 @@ def test_rule_name_filter_selects_only_requested_rules(tmp_path: Path) -> None:
     assert [case.id for case in cases] == ["egils-saga-dream-prophecy-c0002-p0001"]
 
 
+def test_rule_name_filter_uses_filtered_rule_order_for_matching(tmp_path: Path) -> None:
+    ingested = _ingest_xml(
+        tmp_path,
+        """
+        <chapter number="1"><paragraph>He went north and killed a foe.</paragraph></chapter>
+        """,
+    )
+
+    cases = draft_benchmark_cases_from_ingested_xml(
+        ingested,
+        rule_names=("killing-death",),
+    )
+
+    assert [case.id for case in cases] == ["egils-saga-killing-death-c0001-p0001"]
+
+
 def test_include_first_unmatched_adds_unmatched_passages_when_no_rules_match(
     tmp_path: Path,
 ) -> None:

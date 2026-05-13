@@ -181,17 +181,20 @@ def draft_benchmark_cases_from_ingested_xml(
         if unknown_rule_names:
             unknown_display = ", ".join(sorted(unknown_rule_names))
             raise ValueError(f"unknown rule name(s): {unknown_display}")
+        active_rules = tuple(
+            rule for rule in selection_rules if rule.name in allowed_rule_names
+        )
+    else:
+        active_rules = selection_rules
 
     cases: list[BenchmarkCase] = []
     unmatched_passages: list[Passage] = []
     per_rule_counts: dict[str, int] = {}
 
     for passage in ingested.passages:
-        rule = _first_matching_rule(passage.text, selection_rules)
+        rule = _first_matching_rule(passage.text, active_rules)
         if rule is None:
             unmatched_passages.append(passage)
-            continue
-        if allowed_rule_names is not None and rule.name not in allowed_rule_names:
             continue
         if per_rule_limit is not None and per_rule_counts.get(rule.name, 0) >= per_rule_limit:
             continue
