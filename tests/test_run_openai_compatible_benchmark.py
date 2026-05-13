@@ -449,6 +449,109 @@ def test_benchmark_runner_accepts_fenced_json_when_allowed(
     )
 
 
+def test_benchmark_runner_can_continue_after_parser_failure(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class MixedResponseClient:
+        def __init__(
+            self,
+            *,
+            model: str,
+            base_url: str,
+            api_key: str | None = None,
+            timeout_seconds: float = 300.0,
+        ) -> None:
+            self.model = model
+            self.base_url = base_url
+            self.api_key = api_key
+            self.timeout_seconds = timeout_seconds
+            self.call_count = 0
+
+        def generate(self, system: str, user: str) -> str:
+            self.call_count += 1
+            if self.call_count == 1:
+                return "{"
+            return """
+{
+  "passage_id": "manual-source:chapter:0002:passage:0001",
+  "people": [],
+  "places": [],
+  "events": [],
+  "relationships": []
+}
+""".strip()
+
+    monkeypatch.setattr(
+        benchmark_script,
+        "OpenAICompatibleExtractionClient",
+        MixedResponseClient,
+    )
+
+    exit_code = benchmark_script.main(
+        [
+            "--benchmark-file",
+            str(_fixture_path()),
+            "--base-url",
+            "http://localhost:11434/v1",
+            "--model",
+            "local-model",
+            "--limit",
+            "2",
+            "--continue-on-error",
+        ],
+    )
+
+    report = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert report["case_count"] == 2
+    assert report["successful_case_count"] == 1
+    assert report["failed_case_count"] == 1
+    assert report["cases"][0]["status"] == "failed"
+    assert report["cases"][0]["error_type"] == "ExtractionParseError"
+    assert report["cases"][0]["raw_response_preview"] == "{"
+    assert report["macro_average"]["people_precision"] == 1.0
+
+
+def test_benchmark_runner_reports_null_average_when_all_cases_fail(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class InvalidResponseClient:
+        def __init__(
+            self,
+            *,
+            model: str,
+            base_url: str,
+            api_key: str | None = None,
+            timeout_seconds: float = 300.0,
+        ) -> None:
+            self.model = model
+            self.base_url = base_url
+            self.api_key = api_key
+            self.timeout_seconds = timeout_seconds
+
+        def generate(self, system: str, user: str) -> str:
+            return "{"
+
+    monkeypatch.setattr(
+        benchmark_script,
+        "OpenAICompatibleExtractionClient",
+        InvalidResponseClient,
+    )
+
+    report = benchmark_script.run_benchmark(
+        benchmark_file=str(_fixture_path()),
+        base_url="http://localhost:11434/v1",
+        model="local-model",
+        continue_on_error=True,
+        limit=1,
+    )
+
+    assert report["successful_case_count"] == 0
+    assert report["failed_case_count"] == 1
+    assert report["macro_average"] is None
+
+
 def test_benchmark_runner_uses_no_provider_sdk_imports() -> None:
     tree = ast.parse(_script_source())
 
