@@ -98,6 +98,16 @@ Benchmark fixture and scoring scaffolding exists for evaluating extraction quali
 
 The included fixture is intentionally tiny and synthetic; broader fixtures and automated benchmark workflows are still future work.
 
+## Drafting Real Benchmark Fixtures
+
+Use the draft fixture tool to create candidate benchmark cases from SagaDB XML with deterministic keyword rules. The expected labels are intentionally empty and must be reviewed by a human before the fixture is used as gold data. The tool does not call a model or provider.
+
+Output can be redirected from stdout or written with `--output-file`:
+
+```sh
+uv run python tools/draft_real_benchmark_fixture.py --xml-file path/to/saga.en.xml --limit 10 > draft_real_benchmark.json
+```
+
 ## Manual Benchmark Runner
 
 An optional manual benchmark runner can target Ollama, local OpenAI-compatible endpoints, OpenAI-compatible cloud APIs, LM Studio, or vLLM-style servers. Normal tests do not call providers. Use `--limit` to control cost while trying models.
