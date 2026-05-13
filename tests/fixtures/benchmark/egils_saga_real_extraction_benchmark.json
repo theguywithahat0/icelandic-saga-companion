@@ -1,0 +1,219 @@
+{
+  "source": {
+    "title": "Egil's Saga",
+    "repository": "https://github.com/sveinbjornt/sagadb.org",
+    "source_path": "src/egils_saga.en.xml",
+    "source_sha": "6c34b9e07ffb92cc9774571e47b5ce6b21398a93",
+    "notes": "Curated from real SagaDB XML passages; labels reviewed against the extraction schema vocabulary."
+  },
+  "cases": [
+    {
+      "id": "egils-saga-gold-c0001-p0001",
+      "description": "Opening genealogy and marriage network for Ulf/Kveldulf and Kari's family.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0001",
+        "passage_id": "egils-saga:chapter:0001:passage:0001",
+        "text": "There was a man named Ulf, son of Bjalf, and Hallbera, daughter of Ulf the fearless; she was sister of Hallbjorn Half-giant in Hrafnista, and he the father of Kettle H\u00e6ing. Ulf was a man so tall and strong that none could match him, and in his youth he roved the seas as a freebooter. In fellowship with him was one Kari of Berdla, a man of renown for strength and daring; he was a Berserk. Ulf and he had one common purse, and were the dearest friends.\n\nBut when they gave up freebooting, Kari went to his estate at Berdla, being a man of great wealth. Three children had Kari, one son named Eyvind Lambi, another Aulvir Hnuf, and a daughter Salbjorg, who was a most beautiful woman of a noble spirit. Her did Ulf take to wife, and then he too went to his estates. Wealthy he was both in lands and chattels; he took baron's rank as his forefathers had done, and became a great man."
+      },
+      "expected": {
+        "people": ["Ulf", "Bjalf", "Hallbera", "Ulf the fearless", "Hallbjorn Half-giant", "Kettle H\u00e6ing", "Kari of Berdla", "Eyvind Lambi", "Aulvir Hnuf", "Salbjorg"],
+        "places": ["Hrafnista", "Berdla"],
+        "event_types": ["marriage"],
+        "relationship_types": ["kinship", "marriage"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0002-p0001",
+      "description": "Aulvir courts Solveig at Gaula during a sacrificial feast.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0002",
+        "passage_id": "egils-saga:chapter:0002:passage:0001",
+        "text": "Audbjorn was then king over the Firthfolk; there was an earl of his named Hroald, whose son was Thorir. Atli the Slim was then an earl, he dwelt at Gaula; he had sons - Hallstein, Holmstein, and Herstein; and a daughter, Solveig the Fair. It happened one autumn that much people were gathered at Gaula for a sacrificial feast, then saw Aulvir Hnuf Solveig and courted her; he afterwards asked her to wife. But the earl thought him an unequal match and would not give her. Whereupon Aulvir composed many love-songs, and thought so much of Solveig that he left freebooting, but Thorolf and Eyvind Lambi kept it on."
+      },
+      "expected": {
+        "people": ["Audbjorn", "Hroald", "Thorir", "Atli the Slim", "Hallstein", "Holmstein", "Herstein", "Solveig the Fair", "Aulvir Hnuf", "Thorolf", "Eyvind Lambi"],
+        "places": ["Gaula"],
+        "event_types": ["feast", "marriage", "poetry_recitation"],
+        "relationship_types": ["kinship", "marriage"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0004-p0001",
+      "description": "King Harold's battle against Audbjorn and Arnvid at Solskel.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0004",
+        "passage_id": "egils-saga:chapter:0004:passage:0001",
+        "text": "King Audbjorn went with his forces northwards to M\u00e6ra; there he joined king Arnvid and Solvi Bandy-legs, and altogether they had a large host. King Harold also had come from the north with his forces, and the armies met inside Solskel. There was fought a great battle, with much slaughter in either host. Of the M\u00e6rian forces fell the kings Arnvid and Audbjorn, but Solvi escaped, and afterwards became a great sea-rover, and wrought much scathe on Harold's kingdom, and was nicknamed Bandy-legs. On Harold's side fell two earls, Asgaut and Asbjorn, and two sons of earl Hacon, Grjotgard and Herlaug, and many other great men. After this Harold subdued South M\u00e6ra. Vemund Audbjorn's brother still retained the Firthfolk, being made king. It was now autumn, and king Harold was advised not to go south in autumn-tide."
+      },
+      "expected": {
+        "people": ["Audbjorn", "Arnvid", "Solvi Bandy-legs", "Harold", "Asgaut", "Asbjorn", "Hacon", "Grjotgard", "Herlaug", "Vemund"],
+        "places": ["M\u00e6ra", "Solskel", "South M\u00e6ra", "Firthfolk"],
+        "event_types": ["travel", "battle", "death"],
+        "relationship_types": ["alliance", "rules"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0007-p0001",
+      "description": "Bjorgolf's household and the kinship line through Brynjolf, Helga, and Bard.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0007",
+        "passage_id": "egils-saga:chapter:0007:passage:0001",
+        "text": "There was a man in Halogaland named Bjorgolf; he dwelt in Torgar. He was a baron, powerful and wealthy; in strength, stature, and kindred half hill-giant. He had a son named Brynjolf, who was like his father. Bjorgolf was now old, and his wife was dead; and he had given over into his son's hands all business, and found him a wife, Helga, daughter of Kettle H\u00e6ing of Hrafnista. Their son was named Bard; he soon grew to be tall and handsome, and became a right doughty man."
+      },
+      "expected": {
+        "people": ["Bjorgolf", "Brynjolf", "Helga", "Kettle H\u00e6ing", "Bard"],
+        "places": ["Halogaland", "Torgar", "Hrafnista"],
+        "event_types": ["death", "marriage"],
+        "relationship_types": ["kinship", "marriage"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0004-p0002",
+      "description": "Aulvir flees Atli's sons, submits to Harold, and remains with him at Throndheim.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0004",
+        "passage_id": "egils-saga:chapter:0004:passage:0002",
+        "text": "So he set earl Rognvald over North and South M\u00e6ra and Raumsdale, and kept a numerous force about himself.\n\nThat same autumn the sons of Atli set on Aulvir Hnuf at his home, and would fain have slain him. They had such a force that Aulvir could not withstand them, but fled for his life. Going northwards to M\u00e6ra, he there found Harold, and submitted to him, and went north with the king to Throndheim, and he became most friendly with him, and remained with him for a long time thereafter, and was made a skald."
+      },
+      "expected": {
+        "people": ["Rognvald", "Atli", "Aulvir Hnuf", "Harold"],
+        "places": ["North M\u00e6ra", "South M\u00e6ra", "Raumsdale", "M\u00e6ra", "Throndheim"],
+        "event_types": ["travel"],
+        "relationship_types": ["enmity", "serves"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0009-p0002",
+      "description": "The battle in Hafr's Firth and Harold's victory.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0009",
+        "passage_id": "egils-saga:chapter:0009:passage:0002",
+        "text": "The fleets met south in Rogaland in Hafr's Firth. There was fought the greatest battle that king Harold had had, with much slaughter in either host. The king set his own ship in the van, and there the battle was most stubborn, but the end was that king Harold won the victory. Thorir Longchin, king of Agdir, fell there, but Kjotvi the wealthy fled with all his men that could stand, save some that surrendered after the battle. When the roll of Harold's army was called, many were they that had fallen, and many were sore wounded. Thorolf was badly wounded, Bard even worse; nor was there a man unwounded in the king's ship before the mast, except those whom iron bit not to wit the Berserks."
+      },
+      "expected": {
+        "people": ["Harold", "Thorir Longchin", "Kjotvi", "Thorolf", "Bard"],
+        "places": ["Rogaland", "Hafr's Firth", "Agdir"],
+        "event_types": ["battle", "death"],
+        "relationship_types": ["rules"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0020-p0001",
+      "description": "Skallagrim's arranged marriage to Bera and Yngvar's refusal to serve Harold.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0020",
+        "passage_id": "egils-saga:chapter:0020:passage:0001",
+        "text": "There was a man named Yngvar, powerful and wealthy. He had been a baron of the former kings. But after Harold came to the throne, Yngvar sat at home and served not the king. Yngvar was married and had a daughter named Bera. Yngvar dwelt in the Firths. Bera was his only child and heiress. Grim Kveldulf's son asked Bera to wife, and the match was arranged. Grim took Bera in the winter following the summer when Thorolf had parted from him and his father."
+      },
+      "expected": {
+        "people": ["Yngvar", "Harold", "Bera", "Grim Kveldulf's son", "Thorolf"],
+        "places": ["Firths"],
+        "event_types": ["marriage"],
+        "relationship_types": ["kinship", "marriage"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0023-p0003",
+      "description": "H\u00e6ing sails west and settles in Iceland near Thjors-river.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0023",
+        "passage_id": "egils-saga:chapter:0023:passage:0003",
+        "text": "A few winters before Ingjolf and Hjorleif had gone to settle in Iceland; their voyage was much talked about, and 'twas said there was good choice of land there. So H\u00e6ing sailed west over the sea to seek Iceland. And when they saw land, they were approaching it from the south. But because the wind was boisterous, and the surf ran high on the shore, and there was no haven, they sailed on westwards along the sandy coast. And when the wind began to abate, and the surf to calm down, there before them was a wide river-mouth. Up this river they steered their ships, and lay close to the eastern shore thereof. That river is now called Thjors-river; its stream was then much narrower and deeper that it is now. They unloaded their ships, then searched the land eastward of the river, bringing their cattle after them. H\u00e6ing remained for the first winter on the eastern bank of the outer Rang-river."
+      },
+      "expected": {
+        "people": ["Ingjolf", "Hjorleif", "H\u00e6ing"],
+        "places": ["Iceland", "Thjors-river", "Rang-river"],
+        "event_types": ["travel"],
+        "relationship_types": ["travels_to"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0027-p0007",
+      "description": "Kveldulf gives final instructions before dying at sea on the way to Iceland.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0027",
+        "passage_id": "egils-saga:chapter:0027:passage:0007",
+        "text": "But when they were now far advanced over the main, Kveldulf's sickness grew worse. And when it came to this, that death was near, then he called to him his shipmates, and told them that he thought it likely they and he would soon take different ways. 'I have never,' he said, 'been an ailing man; but if it so be (as now seems likely) that I die, then make me a coffin, and put me overboard: and it will go far otherwise than I think if I do not come to Iceland and take land there. Ye shall bear my greeting to my son Grim, when ye meet, and tell him withal that if he come to Iceland, and things so turn out that unlikely as it may seem I be there first, then he shall choose him a homestead as near as may be to where I have come ashore.'\n\nShortly after this Kveldulf died."
+      },
+      "expected": {
+        "people": ["Kveldulf", "Grim"],
+        "places": ["Iceland"],
+        "event_types": ["death", "travel"],
+        "relationship_types": ["kinship", "travels_to"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0040-p0006",
+      "description": "Egil kills Skallagrim's beloved steward after the Brakar-sound incident.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0040",
+        "passage_id": "egils-saga:chapter:0040:passage:0006",
+        "text": "Skallagrim hurled after her a great stone, which struck her between the shoulders, and neither ever came up again. The water there is now called Brakar-sound. But afterwards, in the evening, when they came home to Borg, Egil was very angry. Skallagrim and everybody else were set at table, but Egil had not yet come to his place. He went into the fire-hall, and up to the man who there had the overseeing of work and the management of moneys for Skallagrim, and was most dear to him. Egil dealt him his deathblow, then went to his seat. Skallagrim spoke not a word about it then, and thenceforward the matter was kept quiet. But father and son exchanged no word good or bad, and so that winter passed."
+      },
+      "expected": {
+        "people": ["Skallagrim", "Egil"],
+        "places": ["Brakar-sound", "Borg"],
+        "event_types": ["killing", "death"],
+        "relationship_types": ["kills", "kinship"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0056-p0001",
+      "description": "Egil reports Thorolf's death to Asgerdr and begins composing verse.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0056",
+        "passage_id": "egils-saga:chapter:0056:passage:0001",
+        "text": "Bergonund son of Thorgeir Thornfoot had then married Gunnhilda daughter of Bjorn Yeoman. She had come to keep house with him at Askr. But Asgerdr, whom Thorolf Skallagrimsson had had to wife, was then with Arinbjorn, her kinsman. Thorolf and she had a daughter named Thordis, and the girl was there with her mother. Egil told Asgerdr of Thorolf's death, and offered her his guardianship. Asgerdr was much grieved at the tidings; she answered Egil's words well, saying however but little one way or the other.\n\nBut, at autumn wore on, Egil began to be very gloomy and drank little, and often say with his head drooping in his cloak. One time Arinbjorn went to him and asked what meant his gloom.\n\n'Though now you have had a great loss in your brother, yet 'tis manly to bear up well; man must overlive man. Come, what verse are you now repeating? Let me hear.'\n\nEgil said he had just made this verse:"
+      },
+      "expected": {
+        "people": ["Bergonund", "Thorgeir Thornfoot", "Gunnhilda", "Bjorn Yeoman", "Asgerdr", "Thorolf Skallagrimsson", "Arinbjorn", "Thordis", "Egil"],
+        "places": ["Askr"],
+        "event_types": ["marriage", "death", "poetry_recitation"],
+        "relationship_types": ["kinship", "marriage"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0057-p0001",
+      "description": "Egil and Onund bring their inheritance suit before the court.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0057",
+        "passage_id": "egils-saga:chapter:0057:passage:0001",
+        "text": "King Eric was there numerously attended. Bergonund was among his train, as were his brothers; there was a large following. But when the meeting was to be held about men's lawsuits, both the parties went where the court was set, to plead their proofs. Then was Onund full of big words. Now where the court sate was a level plot, with hazel-poles planted in a ring, and outside were twisted ropes all around. This was called, 'the precincts.' Within the ring sate twelve judges of the Firth-folk, twelve of the Sogn-folk, twelve of the Horda-folk. These three twelves were to judge all the suits. Arinbjorn ruled who should be judges from the Firth-folk, Thord of Aurland who should be so from the Sogn-folk. All these were of one party. Arinbjorn had brought thither a long-ship full equipt, also many small craft and store-ships."
+      },
+      "expected": {
+        "people": ["Eric", "Bergonund", "Onund", "Arinbjorn", "Thord of Aurland"],
+        "places": ["Firthfolk", "Sogn", "Hordaland", "Aurland"],
+        "event_types": ["legal_case"],
+        "relationship_types": ["alliance"]
+      }
+    },
+    {
+      "id": "egils-saga-gold-c0063-p0005",
+      "description": "Egil recites Head-Ransom before the king after Arinbjorn intercedes.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0063",
+        "passage_id": "egils-saga:chapter:0063:passage:0005",
+        "text": "Then answered the king: 'A wondrous eager champion art thou, Arinbjorn, in this thy helping of Egil. Loth were I to do thee scathe, if it comes to this; if thou wilt rather give away thine own life than that he be slain. But sufficient are the charges against Egil, whatever I cause to be done with him.'\n\nAnd when the king had said this, then Egil advanced before him and began the poem, and recited in a loud voice, and at once won silence.\n\n<strong>HEAD-RANSOM</strong>\n\n<strong>1.</strong>\n\n'Westward I sailed the wave,\nWithin me Odin gave\nThe sea of song I bear\n(So 'tis my wont to fare):\nI launched my floating oak\nWhen loosening ice-floes broke,\nMy mind a galleon fraught\nWith load of minstrel thought.\n\n<strong>2.</strong>"
+      },
+      "expected": {
+        "people": ["Arinbjorn", "Egil"],
+        "places": [],
+        "event_types": ["poetry_recitation"],
+        "relationship_types": ["alliance"]
+      }
+    }
+  ]
+}
