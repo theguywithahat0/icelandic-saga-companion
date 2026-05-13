@@ -29,6 +29,19 @@ def test_default_rules_include_expected_topics() -> None:
     }
 
 
+def test_default_rules_include_broadened_keywords() -> None:
+    rules = {rule.name: rule.keywords for rule in default_draft_selection_rules()}
+
+    assert "took ship" in rules["travel"]
+    assert "slain" in rules["killing-death"]
+    assert "betrothed" in rules["marriage"]
+    assert "kinsman" in rules["kinship"]
+    assert "althing" in rules["legal-case"]
+    assert "drinking" in rules["feast"]
+    assert "dreamt" in rules["dream-prophecy"]
+    assert "recited" in rules["poetry"]
+
+
 def test_selection_finds_matching_passages_case_insensitively(tmp_path: Path) -> None:
     ingested = _ingest_xml(
         tmp_path,
@@ -45,6 +58,35 @@ def test_selection_finds_matching_passages_case_insensitively(tmp_path: Path) ->
     assert "Saga egils-saga" in cases[0].description
     assert "matched rule travel" in cases[0].description
     assert "passage title Chapter 1" in cases[0].description
+
+
+def test_selection_uses_broadened_keywords(tmp_path: Path) -> None:
+    ingested = _ingest_xml(
+        tmp_path,
+        """
+        <chapter number="1"><paragraph>He took ship in summer.</paragraph></chapter>
+        <chapter number="2"><paragraph>The man was slain there.</paragraph></chapter>
+        <chapter number="3"><paragraph>She was betrothed soon after.</paragraph></chapter>
+        <chapter number="4"><paragraph>His kinsman spoke.</paragraph></chapter>
+        <chapter number="5"><paragraph>They met at the althing.</paragraph></chapter>
+        <chapter number="6"><paragraph>The guests were drinking.</paragraph></chapter>
+        <chapter number="7"><paragraph>He dreamt of an omen.</paragraph></chapter>
+        <chapter number="8"><paragraph>The poet recited verses.</paragraph></chapter>
+        """,
+    )
+
+    cases = draft_benchmark_cases_from_ingested_xml(ingested)
+
+    assert [case.id for case in cases] == [
+        "egils-saga-travel-0001",
+        "egils-saga-killing-death-0001",
+        "egils-saga-marriage-0001",
+        "egils-saga-kinship-0001",
+        "egils-saga-legal-case-0001",
+        "egils-saga-feast-0001",
+        "egils-saga-dream-prophecy-0001",
+        "egils-saga-poetry-0001",
+    ]
 
 
 def test_selected_cases_have_empty_expected_labels(tmp_path: Path) -> None:
@@ -88,6 +130,56 @@ def test_limit_is_applied_after_selection(tmp_path: Path) -> None:
     assert cases[0].passage.text == "He sailed away."
 
 
+def test_include_first_unmatched_adds_unmatched_passages_when_no_rules_match(
+    tmp_path: Path,
+) -> None:
+    ingested = _ingest_xml(
+        tmp_path,
+        """
+        <chapter number="1"><paragraph>No obvious cue here.</paragraph></chapter>
+        <chapter number="2"><paragraph>Still quiet.</paragraph></chapter>
+        """,
+    )
+
+    cases = draft_benchmark_cases_from_ingested_xml(
+        ingested,
+        include_first_unmatched=2,
+    )
+
+    assert [case.id for case in cases] == [
+        "egils-saga-unmatched-0001",
+        "egils-saga-unmatched-0001",
+    ]
+    assert [case.passage.text for case in cases] == [
+        "No obvious cue here.",
+        "Still quiet.",
+    ]
+    assert all(case.expected.people == () for case in cases)
+
+
+def test_include_first_unmatched_fills_short_limited_selection(tmp_path: Path) -> None:
+    ingested = _ingest_xml(
+        tmp_path,
+        """
+        <chapter number="1"><paragraph>He sailed away.</paragraph></chapter>
+        <chapter number="2"><paragraph>No obvious cue here.</paragraph></chapter>
+        <chapter number="3"><paragraph>Still quiet.</paragraph></chapter>
+        """,
+    )
+
+    cases = draft_benchmark_cases_from_ingested_xml(
+        ingested,
+        limit=3,
+        include_first_unmatched=5,
+    )
+
+    assert [case.id for case in cases] == [
+        "egils-saga-travel-0001",
+        "egils-saga-unmatched-0001",
+        "egils-saga-unmatched-0001",
+    ]
+
+
 def test_max_text_characters_truncates_passage_text(tmp_path: Path) -> None:
     ingested = _ingest_xml(
         tmp_path,
@@ -112,6 +204,8 @@ def test_invalid_limit_and_max_text_characters_raise_value_error(
 
     with pytest.raises(ValueError, match="limit"):
         draft_benchmark_cases_from_ingested_xml(ingested, limit=0)
+    with pytest.raises(ValueError, match="include_first_unmatched"):
+        draft_benchmark_cases_from_ingested_xml(ingested, include_first_unmatched=0)
     with pytest.raises(ValueError, match="max_text_characters"):
         draft_benchmark_cases_from_ingested_xml(ingested, max_text_characters=0)
 

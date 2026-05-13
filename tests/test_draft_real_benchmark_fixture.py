@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 from saga_companion.benchmark import load_benchmark_cases
 
 
@@ -63,6 +65,110 @@ def test_cli_writes_only_when_output_file_is_provided(
     assert json.loads(output_path.read_text(encoding="utf-8"))["cases"]
 
 
+def test_cli_verbose_prints_stderr_summary(tmp_path: Path, capsys) -> None:
+    xml_path = _write_xml(tmp_path)
+
+    exit_code = draft_script.main(
+        [
+            "--xml-file",
+            str(xml_path),
+            "--limit",
+            "1",
+            "--verbose",
+            "--max-characters",
+            "1000",
+            "--overlap-characters",
+            "0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert f"xml_file: {xml_path}" in captured.err
+    assert "source_id: egils-saga" in captured.err
+    assert "chapters: 2" in captured.err
+    assert "passages: 2" in captured.err
+    assert "drafted_cases: 1" in captured.err
+
+
+def test_cli_verbose_prints_output_file_path(tmp_path: Path, capsys) -> None:
+    xml_path = _write_xml(tmp_path)
+    output_path = tmp_path / "draft_real_benchmark.json"
+
+    exit_code = draft_script.main(
+        [
+            "--xml-file",
+            str(xml_path),
+            "--output-file",
+            str(output_path),
+            "--verbose",
+            "--limit",
+            "1",
+            "--max-characters",
+            "1000",
+            "--overlap-characters",
+            "0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert captured.out == ""
+    assert f"output_file: {output_path}" in captured.err
+
+
+def test_cli_warns_when_zero_cases_are_drafted(tmp_path: Path, capsys) -> None:
+    xml_path = _write_xml_without_matches(tmp_path)
+
+    exit_code = draft_script.main(
+        [
+            "--xml-file",
+            str(xml_path),
+            "--max-characters",
+            "1000",
+            "--overlap-characters",
+            "0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert json.loads(captured.out) == {"cases": []}
+    assert (
+        "warning: no benchmark cases matched the default keyword rules"
+        in captured.err
+    )
+
+
+def test_cli_include_first_unmatched_adds_fallback_cases(
+    tmp_path: Path,
+    capsys,
+) -> None:
+    xml_path = _write_xml_without_matches(tmp_path)
+
+    exit_code = draft_script.main(
+        [
+            "--xml-file",
+            str(xml_path),
+            "--include-first-unmatched",
+            "2",
+            "--max-characters",
+            "1000",
+            "--overlap-characters",
+            "0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert exit_code == 0
+    assert [case["id"] for case in data["cases"]] == [
+        "egils-saga-unmatched-0001",
+        "egils-saga-unmatched-0001",
+    ]
+    assert "warning:" not in captured.err
+
+
 def test_cli_without_output_file_does_not_write_files(
     tmp_path: Path,
     capsys,
@@ -115,6 +221,15 @@ def test_cli_output_can_be_loaded_by_benchmark_loader(tmp_path: Path) -> None:
     ]
 
 
+def test_cli_validates_include_first_unmatched(capsys) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        draft_script.main(["--xml-file", "unused.xml", "--include-first-unmatched", "0"])
+
+    captured = capsys.readouterr()
+    assert exc_info.value.code == 2
+    assert "value must be greater than 0" in captured.err
+
+
 def test_cli_uses_no_provider_sdk_imports() -> None:
     imported_modules = _imported_modules()
 
@@ -149,6 +264,26 @@ def _write_xml(tmp_path: Path) -> Path:
   <content>
     <chapter number="1"><paragraph>He sailed west.</paragraph></chapter>
     <chapter number="2"><paragraph>He killed a foe.</paragraph></chapter>
+  </content>
+</document>
+""",
+        encoding="utf-8",
+    )
+    return xml_path
+
+
+def _write_xml_without_matches(tmp_path: Path) -> Path:
+    xml_path = tmp_path / "egils_saga.en.xml"
+    xml_path.write_text(
+        """\
+<document>
+  <metadata>
+    <title>Egils saga</title>
+    <basename>egils_saga.en</basename>
+  </metadata>
+  <content>
+    <chapter number="1"><paragraph>Quiet words here.</paragraph></chapter>
+    <chapter number="2"><paragraph>Plain talk follows.</paragraph></chapter>
   </content>
 </document>
 """,
