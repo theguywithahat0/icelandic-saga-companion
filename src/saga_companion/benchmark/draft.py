@@ -156,7 +156,9 @@ def draft_benchmark_cases_from_ingested_xml(
     ingested: IngestedXmlSaga,
     *,
     rules: tuple[DraftSelectionRule, ...] | None = None,
+    rule_names: tuple[str, ...] | None = None,
     limit: int | None = None,
+    per_rule_limit: int | None = None,
     include_first_unmatched: int | None = None,
     max_text_characters: int = 1200,
 ) -> list[BenchmarkCase]:
@@ -165,18 +167,36 @@ def draft_benchmark_cases_from_ingested_xml(
         raise ValueError("limit must be greater than 0")
     if include_first_unmatched is not None and include_first_unmatched <= 0:
         raise ValueError("include_first_unmatched must be greater than 0")
+    if per_rule_limit is not None and per_rule_limit <= 0:
+        raise ValueError("per_rule_limit must be greater than 0")
     if max_text_characters <= 0:
         raise ValueError("max_text_characters must be greater than 0")
 
     source_id = ingested.saga.id
     selection_rules = rules if rules is not None else default_draft_selection_rules()
+    allowed_rule_names = {name for name in rule_names} if rule_names is not None else None
+    if allowed_rule_names is not None:
+        known_rule_names = {rule.name for rule in selection_rules}
+        unknown_rule_names = allowed_rule_names - known_rule_names
+        if unknown_rule_names:
+            unknown_display = ", ".join(sorted(unknown_rule_names))
+            raise ValueError(f"unknown rule name(s): {unknown_display}")
+        active_rules = tuple(
+            rule for rule in selection_rules if rule.name in allowed_rule_names
+        )
+    else:
+        active_rules = selection_rules
+
     cases: list[BenchmarkCase] = []
     unmatched_passages: list[Passage] = []
+    per_rule_counts: dict[str, int] = {}
 
     for passage in ingested.passages:
-        rule = _first_matching_rule(passage.text, selection_rules)
+        rule = _first_matching_rule(passage.text, active_rules)
         if rule is None:
             unmatched_passages.append(passage)
+            continue
+        if per_rule_limit is not None and per_rule_counts.get(rule.name, 0) >= per_rule_limit:
             continue
 
         cases.append(
@@ -187,6 +207,7 @@ def draft_benchmark_cases_from_ingested_xml(
                 max_text_characters=max_text_characters,
             )
         )
+        per_rule_counts[rule.name] = per_rule_counts.get(rule.name, 0) + 1
         if limit is not None and len(cases) >= limit:
             break
 

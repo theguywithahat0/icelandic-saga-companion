@@ -152,6 +152,58 @@ def test_limit_is_applied_after_selection(tmp_path: Path) -> None:
     assert cases[0].passage.text == "He sailed away."
 
 
+def test_per_rule_limit_produces_balanced_selection(tmp_path: Path) -> None:
+    ingested = _ingest_xml(
+        tmp_path,
+        """
+        <chapter number="1"><paragraph>He sailed west.</paragraph></chapter>
+        <chapter number="2"><paragraph>She went east.</paragraph></chapter>
+        <chapter number="3"><paragraph>A man was killed.</paragraph></chapter>
+        <chapter number="4"><paragraph>Another was slain.</paragraph></chapter>
+        """,
+    )
+
+    cases = draft_benchmark_cases_from_ingested_xml(ingested, per_rule_limit=1)
+
+    assert [case.id for case in cases] == [
+        "egils-saga-travel-c0001-p0001",
+        "egils-saga-killing-death-c0003-p0001",
+    ]
+
+
+def test_rule_name_filter_selects_only_requested_rules(tmp_path: Path) -> None:
+    ingested = _ingest_xml(
+        tmp_path,
+        """
+        <chapter number="1"><paragraph>He sailed west.</paragraph></chapter>
+        <chapter number="2"><paragraph>She dreamed at night.</paragraph></chapter>
+        """,
+    )
+
+    cases = draft_benchmark_cases_from_ingested_xml(
+        ingested,
+        rule_names=("dream-prophecy",),
+    )
+
+    assert [case.id for case in cases] == ["egils-saga-dream-prophecy-c0002-p0001"]
+
+
+def test_rule_name_filter_uses_filtered_rule_order_for_matching(tmp_path: Path) -> None:
+    ingested = _ingest_xml(
+        tmp_path,
+        """
+        <chapter number="1"><paragraph>He went north and killed a foe.</paragraph></chapter>
+        """,
+    )
+
+    cases = draft_benchmark_cases_from_ingested_xml(
+        ingested,
+        rule_names=("killing-death",),
+    )
+
+    assert [case.id for case in cases] == ["egils-saga-killing-death-c0001-p0001"]
+
+
 def test_include_first_unmatched_adds_unmatched_passages_when_no_rules_match(
     tmp_path: Path,
 ) -> None:
@@ -228,8 +280,12 @@ def test_invalid_limit_and_max_text_characters_raise_value_error(
         draft_benchmark_cases_from_ingested_xml(ingested, limit=0)
     with pytest.raises(ValueError, match="include_first_unmatched"):
         draft_benchmark_cases_from_ingested_xml(ingested, include_first_unmatched=0)
+    with pytest.raises(ValueError, match="per_rule_limit"):
+        draft_benchmark_cases_from_ingested_xml(ingested, per_rule_limit=0)
     with pytest.raises(ValueError, match="max_text_characters"):
         draft_benchmark_cases_from_ingested_xml(ingested, max_text_characters=0)
+    with pytest.raises(ValueError, match="unknown rule name"):
+        draft_benchmark_cases_from_ingested_xml(ingested, rule_names=("missing",))
 
 
 def test_serialization_matches_loader_shape(tmp_path: Path) -> None:
