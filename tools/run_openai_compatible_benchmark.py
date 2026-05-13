@@ -39,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
             timeout_seconds=args.timeout_seconds,
             debug_provider_response=args.debug_provider_response,
             allow_markdown_json=args.allow_markdown_json,
+            continue_on_error=args.continue_on_error,
             limit=args.limit,
             case_ids=args.case_id,
         )
@@ -64,6 +65,7 @@ def run_benchmark(
     timeout_seconds: float = 300.0,
     debug_provider_response: bool = False,
     allow_markdown_json: bool = False,
+    continue_on_error: bool = False,
     limit: int | None = None,
     case_ids: list[str] | None = None,
 ) -> dict[str, object]:
@@ -97,7 +99,7 @@ def run_benchmark(
                 debug_client,
                 allow_markdown_json=allow_markdown_json,
             )
-        except (ExtractionParseError, ProviderResponseError):
+        except (ExtractionParseError, ProviderResponseError) as exc:
             if debug_provider_response:
                 _print_debug_provider_response(
                     model=model,
@@ -107,6 +109,15 @@ def run_benchmark(
                     provider_client=provider_client,
                     raw_response=debug_client.raw_response,
                 )
+            if continue_on_error:
+                case_reports.append(
+                    failed_case_report(
+                        case=case,
+                        error=exc,
+                        raw_response=debug_client.raw_response,
+                    ),
+                )
+                continue
             raise
         score = score_extraction(case.expected, result.extraction)
         scores.append(score)
@@ -120,13 +131,17 @@ def run_benchmark(
             },
         )
 
+    successful_case_count = len(scores)
+    failed_case_count = len(case_reports) - successful_case_count
     return {
         "provider": "openai_compatible",
         "base_url": base_url,
         "model": model,
         "case_count": len(case_reports),
+        "successful_case_count": successful_case_count,
+        "failed_case_count": failed_case_count,
         "cases": case_reports,
-        "macro_average": average_scores(scores),
+        "macro_average": average_scores(scores) if scores else None,
     }
 
 
@@ -145,6 +160,24 @@ def average_scores(scores: list[ExtractionScore]) -> dict[str, float]:
     }
 
 
+def failed_case_report(
+    *,
+    case: BenchmarkCase,
+    error: Exception,
+    raw_response: str | None,
+) -> dict[str, object]:
+    """Build a JSON-serializable report for a failed benchmark case."""
+    return {
+        "id": case.id,
+        "description": case.description,
+        "passage_id": case.passage.passage_id,
+        "status": "failed",
+        "error_type": type(error).__name__,
+        "error": str(error),
+        "raw_response_preview": _preview(raw_response) if raw_response is not None else None,
+    }
+
+
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Manually run extraction benchmark fixtures against an OpenAI-compatible endpoint.",
@@ -156,6 +189,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--timeout-seconds", type=_positive_float, default=300.0)
     parser.add_argument("--debug-provider-response", action="store_true")
     parser.add_argument("--allow-markdown-json", action="store_true")
+    parser.add_argument("--continue-on-error", action="store_true")
     parser.add_argument("--limit", type=_positive_int)
     parser.add_argument("--case-id", action="append")
     return parser.parse_args(argv)

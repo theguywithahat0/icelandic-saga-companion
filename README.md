@@ -126,7 +126,15 @@ For an OpenAI-compatible cloud endpoint with a bearer token:
 uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/egils_saga_real_extraction_benchmark.json --base-url https://api.openai.com/v1 --model <model> --api-key-env-var OPENAI_API_KEY --limit 1
 ```
 
-No model has been benchmarked yet.
+Add `--continue-on-error` for full fixture runs where one malformed provider response should not discard the rest of the report. This records failed cases with error details and computes macro averages over successful cases.
+
+Save manual result files outside git, for example:
+
+```sh
+uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/egils_saga_real_extraction_benchmark.json --base-url http://localhost:11434/v1 --model <model> --timeout-seconds 300 --allow-markdown-json --continue-on-error > benchmark-results/<model>-egils-real.json
+```
+
+No model benchmark results are included in git yet.
 
 If a provider response fails parsing, add `--debug-provider-response` to print sanitized provider metadata, case id, and raw response previews to stderr. API key values are not printed.
 
