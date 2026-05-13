@@ -31,13 +31,20 @@ def test_fixture_loader_loads_all_tiny_cases() -> None:
 def test_real_egils_saga_fixture_loads_curated_cases() -> None:
     cases = load_benchmark_cases(_real_fixture_path())
 
-    assert len(cases) == 12
+    assert len(cases) == 13
     assert all(case.passage.source_id == "egils-saga" for case in cases)
     assert cases[0].id == "egils-saga-gold-c0001-p0001"
     assert "Ulf" in cases[0].expected.people
     assert "marriage" in cases[0].expected.event_types
     assert cases[-1].id == "egils-saga-gold-c0063-p0005"
     assert "poetry_recitation" in cases[-1].expected.event_types
+
+
+def test_real_egils_saga_fixture_does_not_label_negated_service() -> None:
+    cases = load_benchmark_cases(_real_fixture_path())
+    yngvar_case = next(case for case in cases if case.id == "egils-saga-gold-c0020-p0001")
+
+    assert yngvar_case.expected.relationship_types == ("kinship", "marriage")
 
 
 def test_real_egils_saga_fixture_has_diverse_reviewed_labels() -> None:

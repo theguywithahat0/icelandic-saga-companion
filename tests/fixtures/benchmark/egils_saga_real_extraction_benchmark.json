@@ -72,6 +72,22 @@
       }
     },
     {
+      "id": "egils-saga-gold-c0004-p0002",
+      "description": "Aulvir flees Atli's sons, submits to Harold, and remains with him at Throndheim.",
+      "passage": {
+        "source_id": "egils-saga",
+        "chapter_id": "egils-saga:chapter:0004",
+        "passage_id": "egils-saga:chapter:0004:passage:0002",
+        "text": "So he set earl Rognvald over North and South M\u00e6ra and Raumsdale, and kept a numerous force about himself.\n\nThat same autumn the sons of Atli set on Aulvir Hnuf at his home, and would fain have slain him. They had such a force that Aulvir could not withstand them, but fled for his life. Going northwards to M\u00e6ra, he there found Harold, and submitted to him, and went north with the king to Throndheim, and he became most friendly with him, and remained with him for a long time thereafter, and was made a skald."
+      },
+      "expected": {
+        "people": ["Rognvald", "Atli", "Aulvir Hnuf", "Harold"],
+        "places": ["North M\u00e6ra", "South M\u00e6ra", "Raumsdale", "M\u00e6ra", "Throndheim"],
+        "event_types": ["travel"],
+        "relationship_types": ["enmity", "serves"]
+      }
+    },
+    {
       "id": "egils-saga-gold-c0009-p0002",
       "description": "The battle in Hafr's Firth and Harold's victory.",
       "passage": {
@@ -100,7 +116,7 @@
         "people": ["Yngvar", "Harold", "Bera", "Grim Kveldulf's son", "Thorolf"],
         "places": ["Firths"],
         "event_types": ["marriage"],
-        "relationship_types": ["kinship", "marriage", "serves"]
+        "relationship_types": ["kinship", "marriage"]
       }
     },
     {

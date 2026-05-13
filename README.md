@@ -96,7 +96,7 @@ Some local instruct models, such as Mistral variants, may wrap otherwise valid J
 
 Benchmark fixture and scoring scaffolding exists for evaluating extraction quality from already-parsed results. A tiny synthetic fixture is included for tests; these snippets are not claimed as real saga quotations.
 
-A curated real-passage gold fixture is also included at `tests/fixtures/benchmark/egils_saga_real_extraction_benchmark.json`. It contains 12 reviewed passages from SagaDB's `src/egils_saga.en.xml`, with expected people, places, event types, and relationship types mapped to the extraction schema vocabulary. The source XML is public-domain SagaDB text from `sveinbjornt/sagadb.org` at commit blob `6c34b9e07ffb92cc9774571e47b5ce6b21398a93`.
+A curated real-passage gold fixture is also included at `tests/fixtures/benchmark/egils_saga_real_extraction_benchmark.json`. It contains 13 reviewed passages from SagaDB's `src/egils_saga.en.xml`, with expected people, places, event types, and relationship types mapped to the extraction schema vocabulary. The source XML is public-domain SagaDB text from `sveinbjornt/sagadb.org` at commit blob `6c34b9e07ffb92cc9774571e47b5ce6b21398a93`.
 
 Broader fixtures and automated benchmark workflows are still future work.
 
