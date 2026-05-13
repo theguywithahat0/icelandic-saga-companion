@@ -32,7 +32,7 @@ def test_cli_prints_json_to_stdout_when_no_output_file_is_provided(
     data = json.loads(captured.out)
     assert exit_code == 0
     assert len(data["cases"]) == 1
-    assert data["cases"][0]["id"] == "egils-saga-travel-0001"
+    assert data["cases"][0]["id"] == "egils-saga-travel-c0001-p0001"
     assert captured.err == ""
 
 
@@ -163,8 +163,8 @@ def test_cli_include_first_unmatched_adds_fallback_cases(
     data = json.loads(captured.out)
     assert exit_code == 0
     assert [case["id"] for case in data["cases"]] == [
-        "egils-saga-unmatched-0001",
-        "egils-saga-unmatched-0001",
+        "egils-saga-unmatched-c0001-p0001",
+        "egils-saga-unmatched-c0002-p0001",
     ]
     assert "warning:" not in captured.err
 
@@ -216,8 +216,8 @@ def test_cli_output_can_be_loaded_by_benchmark_loader(tmp_path: Path) -> None:
     cases = load_benchmark_cases(output_path)
     assert exit_code == 0
     assert [case.id for case in cases] == [
-        "egils-saga-travel-0001",
-        "egils-saga-killing-death-0001",
+        "egils-saga-travel-c0001-p0001",
+        "egils-saga-killing-death-c0002-p0001",
     ]
 
 

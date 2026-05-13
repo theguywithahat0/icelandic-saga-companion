@@ -281,7 +281,12 @@ def _build_case(
         f"passage:{passage.passage_index:04d}"
     )
     return BenchmarkCase(
-        id=_case_id(source_id, rule_name, passage.passage_index),
+        id=_case_id(
+            source_id,
+            rule_name,
+            passage.chapter_index,
+            passage.passage_index,
+        ),
         description=_description(source_id, rule_name, passage.title),
         passage=BenchmarkPassage(
             source_id=source_id,
@@ -298,8 +303,16 @@ def _build_case(
     )
 
 
-def _case_id(source_id: str, rule_name: str, passage_index: int) -> str:
-    return f"{_safe_id(source_id)}-{_safe_id(rule_name)}-{passage_index:04d}"
+def _case_id(
+    source_id: str,
+    rule_name: str,
+    chapter_index: int,
+    passage_index: int,
+) -> str:
+    return (
+        f"{_safe_id(source_id)}-{_safe_id(rule_name)}-"
+        f"c{chapter_index:04d}-p{passage_index:04d}"
+    )
 
 
 def _description(source_id: str, rule_name: str, title: str) -> str:

@@ -53,7 +53,7 @@ def test_selection_finds_matching_passages_case_insensitively(tmp_path: Path) ->
 
     cases = draft_benchmark_cases_from_ingested_xml(ingested)
 
-    assert [case.id for case in cases] == ["egils-saga-travel-0001"]
+    assert [case.id for case in cases] == ["egils-saga-travel-c0001-p0001"]
     assert cases[0].passage.text == "Egil SAILED west."
     assert "Saga egils-saga" in cases[0].description
     assert "matched rule travel" in cases[0].description
@@ -78,14 +78,14 @@ def test_selection_uses_broadened_keywords(tmp_path: Path) -> None:
     cases = draft_benchmark_cases_from_ingested_xml(ingested)
 
     assert [case.id for case in cases] == [
-        "egils-saga-travel-0001",
-        "egils-saga-killing-death-0001",
-        "egils-saga-marriage-0001",
-        "egils-saga-kinship-0001",
-        "egils-saga-legal-case-0001",
-        "egils-saga-feast-0001",
-        "egils-saga-dream-prophecy-0001",
-        "egils-saga-poetry-0001",
+        "egils-saga-travel-c0001-p0001",
+        "egils-saga-killing-death-c0002-p0001",
+        "egils-saga-marriage-c0003-p0001",
+        "egils-saga-kinship-c0004-p0001",
+        "egils-saga-legal-case-c0005-p0001",
+        "egils-saga-feast-c0006-p0001",
+        "egils-saga-dream-prophecy-c0007-p0001",
+        "egils-saga-poetry-c0008-p0001",
     ]
 
 
@@ -111,7 +111,29 @@ def test_duplicate_matching_passage_uses_first_matching_rule(tmp_path: Path) -> 
 
     cases = draft_benchmark_cases_from_ingested_xml(ingested)
 
-    assert [case.id for case in cases] == ["egils-saga-travel-0001"]
+    assert [case.id for case in cases] == ["egils-saga-travel-c0001-p0001"]
+
+
+def test_case_ids_include_chapter_index_to_avoid_duplicates(tmp_path: Path) -> None:
+    ingested = _ingest_xml(
+        tmp_path,
+        """
+        <chapter number="1"><paragraph>He sailed west.</paragraph></chapter>
+        <chapter number="2"><paragraph>She sailed east.</paragraph></chapter>
+        """,
+    )
+
+    cases = draft_benchmark_cases_from_ingested_xml(ingested)
+
+    assert [case.id for case in cases] == [
+        "egils-saga-travel-c0001-p0001",
+        "egils-saga-travel-c0002-p0001",
+    ]
+    assert len({case.id for case in cases}) == 2
+    assert [case.passage.passage_id for case in cases] == [
+        "egils-saga:chapter:0001:passage:0001",
+        "egils-saga:chapter:0002:passage:0001",
+    ]
 
 
 def test_limit_is_applied_after_selection(tmp_path: Path) -> None:
@@ -147,8 +169,8 @@ def test_include_first_unmatched_adds_unmatched_passages_when_no_rules_match(
     )
 
     assert [case.id for case in cases] == [
-        "egils-saga-unmatched-0001",
-        "egils-saga-unmatched-0001",
+        "egils-saga-unmatched-c0001-p0001",
+        "egils-saga-unmatched-c0002-p0001",
     ]
     assert [case.passage.text for case in cases] == [
         "No obvious cue here.",
@@ -174,9 +196,9 @@ def test_include_first_unmatched_fills_short_limited_selection(tmp_path: Path) -
     )
 
     assert [case.id for case in cases] == [
-        "egils-saga-travel-0001",
-        "egils-saga-unmatched-0001",
-        "egils-saga-unmatched-0001",
+        "egils-saga-travel-c0001-p0001",
+        "egils-saga-unmatched-c0002-p0001",
+        "egils-saga-unmatched-c0003-p0001",
     ]
 
 
