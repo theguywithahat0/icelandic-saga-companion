@@ -28,7 +28,7 @@
       "expected": {
         "people": ["Skallagrim", "Thorolf"],
         "places": [],
-        "event_types": ["killing"],
+        "event_types": ["killing", "death"],
         "relationship_types": ["kills"]
       }
     },

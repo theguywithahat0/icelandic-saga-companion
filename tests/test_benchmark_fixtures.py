@@ -21,6 +21,7 @@ def test_fixture_loader_loads_all_tiny_cases() -> None:
         "gudrun-simple-marriage",
     ]
     assert cases[0].expected.people == ("Egil",)
+    assert cases[1].expected.event_types == ("killing", "death")
     assert cases[1].expected.relationship_types == ("kills",)
     assert cases[2].passage.text == "Gudrun married Bolli at Laugar."
 

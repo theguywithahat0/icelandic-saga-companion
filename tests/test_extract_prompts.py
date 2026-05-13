@@ -93,9 +93,18 @@ def test_prompt_includes_event_relationship_duplication_rules() -> None:
     assert "travel event" in prompt.system
     assert "travels_to relationship" in prompt.system
     assert "killing event" in prompt.system
+    assert "death event for the victim" in prompt.system
     assert "kills relationship" in prompt.system
     assert "marriage event" in prompt.system
     assert "marriage relationship" in prompt.system
+
+
+def test_prompt_distinguishes_death_without_killing() -> None:
+    prompt = build_passage_extraction_prompt(_passage())
+
+    assert "died without saying they were killed" in prompt.system
+    assert "extract a death event" in prompt.system
+    assert "do not invent a killing event or kills relationship" in prompt.system
 
 
 def test_helper_enum_value_functions_return_enum_value_strings() -> None:
