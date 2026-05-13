@@ -169,6 +169,53 @@ def test_cli_include_first_unmatched_adds_fallback_cases(
     assert "warning:" not in captured.err
 
 
+def test_cli_rule_filter_selects_only_requested_rule(tmp_path: Path, capsys) -> None:
+    xml_path = _write_xml(tmp_path)
+
+    exit_code = draft_script.main(
+        [
+            "--xml-file",
+            str(xml_path),
+            "--rule",
+            "killing-death",
+            "--max-characters",
+            "1000",
+            "--overlap-characters",
+            "0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert exit_code == 0
+    assert [case["id"] for case in data["cases"]] == ["egils-saga-killing-death-c0002-p0001"]
+
+
+def test_cli_per_rule_limit_balances_selection(tmp_path: Path, capsys) -> None:
+    xml_path = _write_xml_travel_heavy(tmp_path)
+
+    exit_code = draft_script.main(
+        [
+            "--xml-file",
+            str(xml_path),
+            "--per-rule-limit",
+            "1",
+            "--max-characters",
+            "1000",
+            "--overlap-characters",
+            "0",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert exit_code == 0
+    assert [case["id"] for case in data["cases"]] == [
+        "egils-saga-travel-c0001-p0001",
+        "egils-saga-killing-death-c0003-p0001",
+    ]
+
+
 def test_cli_without_output_file_does_not_write_files(
     tmp_path: Path,
     capsys,
@@ -284,6 +331,28 @@ def _write_xml_without_matches(tmp_path: Path) -> Path:
   <content>
     <chapter number="1"><paragraph>Quiet words here.</paragraph></chapter>
     <chapter number="2"><paragraph>Plain talk follows.</paragraph></chapter>
+  </content>
+</document>
+""",
+        encoding="utf-8",
+    )
+    return xml_path
+
+
+def _write_xml_travel_heavy(tmp_path: Path) -> Path:
+    xml_path = tmp_path / "egils_saga.en.xml"
+    xml_path.write_text(
+        """\
+<document>
+  <metadata>
+    <title>Egils saga</title>
+    <basename>egils_saga.en</basename>
+  </metadata>
+  <content>
+    <chapter number="1"><paragraph>He sailed west.</paragraph></chapter>
+    <chapter number="2"><paragraph>She went east.</paragraph></chapter>
+    <chapter number="3"><paragraph>He killed a foe.</paragraph></chapter>
+    <chapter number="4"><paragraph>The warrior was slain.</paragraph></chapter>
   </content>
 </document>
 """,

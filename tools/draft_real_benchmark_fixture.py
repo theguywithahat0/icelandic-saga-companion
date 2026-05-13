@@ -9,6 +9,7 @@ import sys
 
 from saga_companion.benchmark import (
     benchmark_cases_to_json_dict,
+    default_draft_selection_rules,
     draft_benchmark_cases_from_ingested_xml,
 )
 from saga_companion.ingest import IngestedXmlSaga, ingest_saga_xml_file
@@ -25,7 +26,9 @@ def main(argv: list[str] | None = None) -> int:
         )
         cases = draft_benchmark_cases_from_ingested_xml(
             ingested,
+            rule_names=tuple(args.rule) if args.rule else None,
             limit=args.limit,
+            per_rule_limit=args.per_rule_limit,
             include_first_unmatched=args.include_first_unmatched,
             max_text_characters=args.max_text_characters,
         )
@@ -59,6 +62,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--xml-file", required=True)
     parser.add_argument("--output-file")
     parser.add_argument("--limit", type=_positive_int)
+    parser.add_argument(
+        "--rule",
+        action="append",
+        choices=[rule.name for rule in default_draft_selection_rules()],
+        help="Repeat to include only specific rules.",
+    )
+    parser.add_argument("--per-rule-limit", type=_positive_int)
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--include-first-unmatched", type=_positive_int)
     parser.add_argument("--max-text-characters", type=_positive_int, default=1200)
