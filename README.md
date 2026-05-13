@@ -96,7 +96,9 @@ Some local instruct models, such as Mistral variants, may wrap otherwise valid J
 
 Benchmark fixture and scoring scaffolding exists for evaluating extraction quality from already-parsed results. A tiny synthetic fixture is included for tests; these snippets are not claimed as real saga quotations.
 
-The included fixture is intentionally tiny and synthetic; broader fixtures and automated benchmark workflows are still future work.
+A curated real-passage gold fixture is also included at `tests/fixtures/benchmark/egils_saga_real_extraction_benchmark.json`. It contains 12 reviewed passages from SagaDB's `src/egils_saga.en.xml`, with expected people, places, event types, and relationship types mapped to the extraction schema vocabulary. The source XML is public-domain SagaDB text from `sveinbjornt/sagadb.org` at commit blob `6c34b9e07ffb92cc9774571e47b5ce6b21398a93`.
+
+Broader fixtures and automated benchmark workflows are still future work.
 
 ## Drafting Real Benchmark Fixtures
 
@@ -115,13 +117,13 @@ An optional manual benchmark runner can target Ollama, local OpenAI-compatible e
 For a local endpoint:
 
 ```sh
-uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/tiny_extraction_benchmark.json --base-url http://localhost:11434/v1 --model <model> --timeout-seconds 300 --limit 1
+uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/egils_saga_real_extraction_benchmark.json --base-url http://localhost:11434/v1 --model <model> --timeout-seconds 300 --allow-markdown-json --limit 1
 ```
 
 For an OpenAI-compatible cloud endpoint with a bearer token:
 
 ```sh
-uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/tiny_extraction_benchmark.json --base-url https://api.openai.com/v1 --model <model> --api-key-env-var OPENAI_API_KEY --limit 1
+uv run python tools/run_openai_compatible_benchmark.py --benchmark-file tests/fixtures/benchmark/egils_saga_real_extraction_benchmark.json --base-url https://api.openai.com/v1 --model <model> --api-key-env-var OPENAI_API_KEY --limit 1
 ```
 
 No model has been benchmarked yet.
