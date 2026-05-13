@@ -87,6 +87,81 @@ def test_prompt_tells_model_not_to_invent_missing_information() -> None:
     assert "Do not invent missing information." in prompt.system
 
 
+@pytest.mark.parametrize(
+    "guidance",
+    [
+        "event_type must be exactly one allowed EventType value.",
+        "relationship_type must be exactly one allowed RelationshipType value.",
+        "Never invent enum labels.",
+        'If no exact event type fits, use event_type "other".',
+        'If no exact relationship type fits, use relationship_type "other".',
+    ],
+)
+def test_prompt_includes_closed_vocabulary_guidance(guidance: str) -> None:
+    prompt = build_passage_extraction_prompt(_passage())
+
+    assert guidance in prompt.system
+
+
+@pytest.mark.parametrize(
+    "guidance",
+    [
+        (
+            'Helping, interceding, or protecting maps to relationship_type '
+            '"alliance" or "other", never "helps".'
+        ),
+        'Wounding as an event maps to event_type "other".',
+        'Wounding as a relationship maps to relationship_type "wounds".',
+        (
+            'Attempted killing or threats must not create "killing" or "death" '
+            'unless death actually occurs; use relationship_type "enmity" '
+            "where appropriate."
+        ),
+    ],
+)
+def test_prompt_includes_schema_drift_mapping_guidance(guidance: str) -> None:
+    prompt = build_passage_extraction_prompt(_passage())
+
+    assert guidance in prompt.system
+
+
+@pytest.mark.parametrize(
+    "guidance",
+    [
+        (
+            "Avoid incidental or generic travel events unless travel, settlement, "
+            "exile, voyage, or journey is central."
+        ),
+        "Avoid generic places unless they are named or structurally important.",
+        "Avoid pronouns or unnamed generic people as named people.",
+    ],
+)
+def test_prompt_includes_precision_guidance(guidance: str) -> None:
+    prompt = build_passage_extraction_prompt(_passage())
+
+    assert guidance in prompt.system
+
+
+@pytest.mark.parametrize(
+    "guidance",
+    [
+        "Prefer names as written in the passage.",
+        (
+            "Do not normalize names to external or Old Norse forms not present "
+            "in the passage."
+        ),
+        (
+            "Do not include titles like King or Earl in the canonical name "
+            "unless needed for disambiguation."
+        ),
+    ],
+)
+def test_prompt_includes_name_discipline_guidance(guidance: str) -> None:
+    prompt = build_passage_extraction_prompt(_passage())
+
+    assert guidance in prompt.system
+
+
 def test_prompt_includes_event_relationship_duplication_rules() -> None:
     prompt = build_passage_extraction_prompt(_passage())
 
