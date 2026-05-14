@@ -67,6 +67,142 @@ def test_benchmark_runner_outputs_json_report_shape(
     assert report["macro_average"]["people_recall"] == 1.0
 
 
+def test_benchmark_runner_progress_goes_to_stderr_and_stdout_stays_json(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _patch_provider(monkeypatch)
+
+    exit_code = benchmark_script.main(
+        [
+            "--benchmark-file",
+            str(_fixture_path()),
+            "--base-url",
+            "http://localhost:11434/v1",
+            "--model",
+            "local-model",
+            "--limit",
+            "1",
+            "--progress",
+        ],
+    )
+
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+    assert exit_code == 0
+    assert report["case_count"] == 1
+    assert captured.err.splitlines()[0] == (
+        "benchmark progress: case_id=egil-simple-travel status=started"
+    )
+    assert "case_id=egil-simple-travel status=succeeded elapsed_seconds=" in captured.err
+    assert "benchmark progress" not in captured.out
+
+
+def test_benchmark_runner_progress_reports_failed_cases(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class InvalidResponseClient:
+        def __init__(
+            self,
+            *,
+            model: str,
+            base_url: str,
+            api_key: str | None = None,
+            timeout_seconds: float = 300.0,
+        ) -> None:
+            self.model = model
+            self.base_url = base_url
+            self.api_key = api_key
+            self.timeout_seconds = timeout_seconds
+
+        def generate(self, system: str, user: str) -> str:
+            return "{"
+
+    monkeypatch.setattr(
+        benchmark_script,
+        "OpenAICompatibleExtractionClient",
+        InvalidResponseClient,
+    )
+
+    exit_code = benchmark_script.main(
+        [
+            "--benchmark-file",
+            str(_fixture_path()),
+            "--base-url",
+            "http://localhost:11434/v1",
+            "--model",
+            "local-model",
+            "--limit",
+            "1",
+            "--continue-on-error",
+            "--progress",
+        ],
+    )
+
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+    assert exit_code == 0
+    assert report["failed_case_count"] == 1
+    assert "case_id=egil-simple-travel status=failed elapsed_seconds=" in captured.err
+    assert "raw_response_preview" not in captured.err
+    assert "{" not in captured.err
+
+
+def test_benchmark_runner_progress_reports_provider_os_errors(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class FailingResponseClient:
+        def __init__(
+            self,
+            *,
+            model: str,
+            base_url: str,
+            api_key: str | None = None,
+            timeout_seconds: float = 300.0,
+        ) -> None:
+            self.model = model
+            self.base_url = base_url
+            self.api_key = api_key
+            self.timeout_seconds = timeout_seconds
+
+        def generate(self, system: str, user: str) -> str:
+            raise TimeoutError("provider timed out")
+
+    monkeypatch.setattr(
+        benchmark_script,
+        "OpenAICompatibleExtractionClient",
+        FailingResponseClient,
+    )
+
+    exit_code = benchmark_script.main(
+        [
+            "--benchmark-file",
+            str(_fixture_path()),
+            "--base-url",
+            "http://localhost:11434/v1",
+            "--model",
+            "local-model",
+            "--limit",
+            "1",
+            "--continue-on-error",
+            "--progress",
+        ],
+    )
+
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+    assert exit_code == 0
+    assert report["failed_case_count"] == 1
+    assert report["cases"][0]["error_type"] == "TimeoutError"
+    assert captured.err.splitlines()[0] == (
+        "benchmark progress: case_id=egil-simple-travel status=started"
+    )
+    assert "case_id=egil-simple-travel status=failed elapsed_seconds=" in captured.err
+    assert "benchmark progress" not in captured.out
+
+
 def test_benchmark_runner_filters_by_case_id(monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_provider(monkeypatch)
 

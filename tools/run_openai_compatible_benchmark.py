@@ -7,6 +7,7 @@ from dataclasses import fields
 import json
 import os
 import sys
+import time
 
 from saga_companion.benchmark import (
     BenchmarkCase,
@@ -42,6 +43,7 @@ def main(argv: list[str] | None = None) -> int:
             continue_on_error=args.continue_on_error,
             limit=args.limit,
             case_ids=args.case_id,
+            progress=args.progress,
         )
     except (
         OSError,
@@ -68,6 +70,7 @@ def run_benchmark(
     continue_on_error: bool = False,
     limit: int | None = None,
     case_ids: list[str] | None = None,
+    progress: bool = False,
 ) -> dict[str, object]:
     """Run benchmark cases and return a JSON-serializable report."""
     if limit is not None and limit <= 0:
@@ -93,13 +96,22 @@ def run_benchmark(
     case_reports: list[dict[str, object]] = []
     scores: list[ExtractionScore] = []
     for case in cases:
+        case_started_at = time.monotonic()
+        if progress:
+            _print_progress_started(case.id)
         try:
             result = extract_passage(
                 canonical_passage_from_benchmark_case(case),
                 debug_client,
                 allow_markdown_json=allow_markdown_json,
             )
-        except (ExtractionParseError, ProviderResponseError) as exc:
+        except (OSError, ExtractionParseError, ProviderResponseError) as exc:
+            if progress:
+                _print_progress_finished(
+                    case_id=case.id,
+                    status="failed",
+                    elapsed_seconds=time.monotonic() - case_started_at,
+                )
             if debug_provider_response:
                 _print_debug_provider_response(
                     model=model,
@@ -130,6 +142,12 @@ def run_benchmark(
                 "extraction": passage_extraction_to_dict(result.extraction),
             },
         )
+        if progress:
+            _print_progress_finished(
+                case_id=case.id,
+                status="succeeded",
+                elapsed_seconds=time.monotonic() - case_started_at,
+            )
 
     successful_case_count = len(scores)
     failed_case_count = len(case_reports) - successful_case_count
@@ -190,6 +208,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--debug-provider-response", action="store_true")
     parser.add_argument("--allow-markdown-json", action="store_true")
     parser.add_argument("--continue-on-error", action="store_true")
+    parser.add_argument("--progress", action="store_true")
     parser.add_argument("--limit", type=_positive_int)
     parser.add_argument("--case-id", action="append")
     return parser.parse_args(argv)
@@ -281,6 +300,25 @@ def _print_debug_provider_response(
             json.dumps(debug_response(), indent=2, sort_keys=True),
             file=sys.stderr,
         )
+
+
+def _print_progress_started(case_id: str) -> None:
+    print(f"benchmark progress: case_id={case_id} status=started", file=sys.stderr)
+
+
+def _print_progress_finished(
+    *,
+    case_id: str,
+    status: str,
+    elapsed_seconds: float,
+) -> None:
+    print(
+        (
+            "benchmark progress: "
+            f"case_id={case_id} status={status} elapsed_seconds={elapsed_seconds:.3f}"
+        ),
+        file=sys.stderr,
+    )
 
 
 def _preview(text: str, limit: int = 4000) -> str:
