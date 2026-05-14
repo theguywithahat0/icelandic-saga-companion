@@ -355,6 +355,42 @@ def test_benchmark_runner_timeout_must_be_positive() -> None:
         )
 
 
+def test_main_passes_compact_prompt_flag_to_run_benchmark(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run_benchmark(**kwargs: object) -> dict[str, object]:
+        captured.update(kwargs)
+        return {
+            "provider": "openai_compatible",
+            "base_url": str(kwargs["base_url"]),
+            "model": str(kwargs["model"]),
+            "case_count": 0,
+            "successful_case_count": 0,
+            "failed_case_count": 0,
+            "cases": [],
+            "macro_average": None,
+        }
+
+    monkeypatch.setattr(benchmark_script, "run_benchmark", fake_run_benchmark)
+
+    exit_code = benchmark_script.main(
+        [
+            "--benchmark-file",
+            str(_fixture_path()),
+            "--base-url",
+            "http://localhost:11434/v1",
+            "--model",
+            "local-model",
+            "--compact-prompt",
+        ],
+    )
+
+    assert exit_code == 0
+    assert captured["compact_prompt"] is True
+
+
 def test_benchmark_file_is_loaded(monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_provider(monkeypatch)
     loaded_paths: list[str] = []
@@ -794,6 +830,7 @@ def _fake_extract_passage(
     client: FakeClient,
     *,
     allow_markdown_json: bool = False,
+    compact_prompt: bool = False,
 ) -> object:
     if passage.ref.passage_id.endswith("0001:passage:0001"):
         extraction = _travel_extraction(passage.ref.passage_id)
@@ -802,6 +839,40 @@ def _fake_extract_passage(
     else:
         extraction = _marriage_extraction(passage.ref.passage_id)
     return SimpleNamespace(extraction=extraction)
+
+
+def test_benchmark_runner_passes_compact_prompt_to_extract_passage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_provider(monkeypatch)
+    compact_values: list[bool] = []
+
+    def tracking_extract_passage(
+        passage: object,
+        client: FakeClient,
+        *,
+        allow_markdown_json: bool = False,
+        compact_prompt: bool = False,
+    ) -> object:
+        compact_values.append(compact_prompt)
+        return _fake_extract_passage(
+            passage,
+            client,
+            allow_markdown_json=allow_markdown_json,
+            compact_prompt=compact_prompt,
+        )
+
+    monkeypatch.setattr(benchmark_script, "extract_passage", tracking_extract_passage)
+
+    benchmark_script.run_benchmark(
+        benchmark_file=str(_fixture_path()),
+        base_url="http://localhost:11434/v1",
+        model="local-model",
+        limit=1,
+        compact_prompt=True,
+    )
+
+    assert compact_values == [True]
 
 
 def _travel_extraction(passage_id: str) -> PassageExtraction:

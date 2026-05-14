@@ -182,6 +182,22 @@ def test_prompt_distinguishes_death_without_killing() -> None:
     assert "do not invent a killing event or kills relationship" in prompt.system
 
 
+def test_compact_prompt_includes_compact_guidance() -> None:
+    prompt = build_passage_extraction_prompt(_passage(), compact=True)
+
+    assert "Compact extraction mode (opt-in)" in prompt.system
+    assert "Use description: null unless a short description is essential" in prompt.system
+    assert "Avoid duplicate reciprocal relationships" in prompt.system
+    assert 'Avoid generic "other" events and "other" relationships' in prompt.system
+    assert "Avoid unnamed or generic people" in prompt.system
+
+
+def test_default_prompt_excludes_compact_guidance() -> None:
+    prompt = build_passage_extraction_prompt(_passage())
+
+    assert "Compact extraction mode (opt-in)" not in prompt.system
+
+
 def test_helper_enum_value_functions_return_enum_value_strings() -> None:
     assert event_type_values() == tuple(event_type.value for event_type in EventType)
     assert relationship_type_values() == tuple(
