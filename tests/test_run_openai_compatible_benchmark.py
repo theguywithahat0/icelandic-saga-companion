@@ -203,6 +203,72 @@ def test_benchmark_runner_progress_reports_provider_os_errors(
     assert "benchmark progress" not in captured.out
 
 
+def test_benchmark_runner_clears_raw_response_before_each_case(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    class TimeoutAfterResponseClient:
+        def __init__(
+            self,
+            *,
+            model: str,
+            base_url: str,
+            api_key: str | None = None,
+            timeout_seconds: float = 300.0,
+        ) -> None:
+            self.model = model
+            self.base_url = base_url
+            self.api_key = api_key
+            self.timeout_seconds = timeout_seconds
+            self.call_count = 0
+
+        def generate(self, system: str, user: str) -> str:
+            self.call_count += 1
+            if self.call_count == 1:
+                return """
+{
+  "passage_id": "manual-source:chapter:0001:passage:0001",
+  "people": [],
+  "places": [],
+  "events": [],
+  "relationships": []
+}
+""".strip()
+            raise TimeoutError("provider timed out")
+
+    monkeypatch.setattr(
+        benchmark_script,
+        "OpenAICompatibleExtractionClient",
+        TimeoutAfterResponseClient,
+    )
+
+    exit_code = benchmark_script.main(
+        [
+            "--benchmark-file",
+            str(_fixture_path()),
+            "--base-url",
+            "http://localhost:11434/v1",
+            "--model",
+            "local-model",
+            "--limit",
+            "2",
+            "--continue-on-error",
+            "--progress",
+        ],
+    )
+
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+    assert exit_code == 0
+    assert report["case_count"] == 2
+    assert report["failed_case_count"] == 1
+    assert report["cases"][1]["error_type"] == "TimeoutError"
+    assert report["cases"][1]["raw_response_preview"] is None
+    assert "case_id=egil-simple-travel status=started" in captured.err
+    assert "case_id=skallagrim-simple-killing status=started" in captured.err
+    assert "case_id=skallagrim-simple-killing status=failed elapsed_seconds=" in captured.err
+
+
 def test_benchmark_runner_filters_by_case_id(monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_provider(monkeypatch)
 

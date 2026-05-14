@@ -99,6 +99,7 @@ def run_benchmark(
         case_started_at = time.monotonic()
         if progress:
             _print_progress_started(case.id)
+        debug_client.raw_response = None
         try:
             result = extract_passage(
                 canonical_passage_from_benchmark_case(case),
