@@ -21,9 +21,13 @@ class ExtractionPrompt:
         _require_text(self.user, "user")
 
 
-def build_passage_extraction_prompt(passage: CanonicalPassage) -> ExtractionPrompt:
+def build_passage_extraction_prompt(
+    passage: CanonicalPassage,
+    *,
+    compact: bool = False,
+) -> ExtractionPrompt:
     """Build prompts for extracting structured information from one passage."""
-    system = _build_system_prompt()
+    system = _build_system_prompt(compact=compact)
     user = "\n".join(
         (
             "Extract structured saga information from this canonical passage.",
@@ -97,13 +101,12 @@ def expected_extraction_json_shape() -> dict[str, object]:
     }
 
 
-def _build_system_prompt() -> str:
+def _build_system_prompt(*, compact: bool) -> str:
     shape = json.dumps(expected_extraction_json_shape(), indent=2, sort_keys=True)
     event_values = ", ".join(event_type_values())
     relationship_values = ", ".join(relationship_type_values())
 
-    return "\n".join(
-        (
+    guidance_lines = [
             "You extract structured information from Icelandic saga passages.",
             "Extract people, places, events, and relationships from exactly one canonical passage.",
             "",
@@ -153,8 +156,21 @@ def _build_system_prompt() -> str:
             "Your final visible assistant message content must contain the JSON object.",
             "Do not put the JSON only in reasoning, thinking, analysis, or hidden fields.",
             "The final visible content must start with { and end with }.",
-        ),
-    )
+    ]
+    if compact:
+        guidance_lines.extend(
+            (
+                "",
+                "Compact extraction mode (opt-in): keep outputs minimal while preserving schema completeness.",
+                "Prefer short event summaries and concise evidence quotes that are exact substrings.",
+                "Use description: null unless a short description is essential for disambiguation.",
+                "Avoid duplicate reciprocal relationships unless directionality changes meaning.",
+                'Avoid generic "other" events and "other" relationships unless structurally important.',
+                "Avoid unnamed or generic people (for example unnamed man) unless central to a key event.",
+                "Avoid incidental travel and generic places even more aggressively than default mode.",
+            ),
+        )
+    return "\n".join(guidance_lines)
 
 
 def _require_text(value: str, field_name: str) -> None:

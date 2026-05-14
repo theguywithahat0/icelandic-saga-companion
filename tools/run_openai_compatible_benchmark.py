@@ -44,6 +44,7 @@ def main(argv: list[str] | None = None) -> int:
             limit=args.limit,
             case_ids=args.case_id,
             progress=args.progress,
+            compact_prompt=args.compact_prompt,
         )
     except (
         OSError,
@@ -71,6 +72,7 @@ def run_benchmark(
     limit: int | None = None,
     case_ids: list[str] | None = None,
     progress: bool = False,
+    compact_prompt: bool = False,
 ) -> dict[str, object]:
     """Run benchmark cases and return a JSON-serializable report."""
     if limit is not None and limit <= 0:
@@ -105,6 +107,7 @@ def run_benchmark(
                 canonical_passage_from_benchmark_case(case),
                 debug_client,
                 allow_markdown_json=allow_markdown_json,
+                compact_prompt=compact_prompt,
             )
         except (OSError, ExtractionParseError, ProviderResponseError) as exc:
             if progress:
@@ -212,6 +215,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--progress", action="store_true")
     parser.add_argument("--limit", type=_positive_int)
     parser.add_argument("--case-id", action="append")
+    parser.add_argument("--compact-prompt", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -262,8 +266,9 @@ def extract_passage(
     client: _DebugCaptureClient,
     *,
     allow_markdown_json: bool,
+    compact_prompt: bool,
 ) -> ExtractionResult:
-    prompt = build_passage_extraction_prompt(passage)
+    prompt = build_passage_extraction_prompt(passage, compact=compact_prompt)
     raw_response = client.generate(system=prompt.system, user=prompt.user)
     extraction = parse_passage_extraction_response(
         raw_response,
