@@ -7,3 +7,5 @@ __pycache__/
 !.env.example
 benchmark-results/
 draft_real_benchmark*.json
+
+extraction-results/
