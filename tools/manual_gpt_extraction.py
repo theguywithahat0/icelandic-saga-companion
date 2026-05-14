@@ -18,13 +18,15 @@ from saga_companion.extract import (
     passage_extraction_to_dict,
     parse_passage_extraction_response,
 )
+from saga_companion.canonicalize import canonicalize_xml_ingestion
+from saga_companion.ingest.xml_pipeline import ingest_saga_xml_file
 from saga_companion.schemas import CanonicalPassage, PassageRef
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     try:
-        passages = _load_passages(args.passages_file)
+        passages = _load_passages(args)
         if args.limit is not None:
             passages = passages[: args.limit]
         if not passages:
@@ -120,7 +122,11 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Manual GPT-backed extraction over canonical passages.",
     )
-    parser.add_argument("--passages-file", required=True)
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument("--xml-file")
+    input_group.add_argument("--passages-file")
+    parser.add_argument("--max-characters", type=_positive_int, default=6000)
+    parser.add_argument("--overlap-characters", type=_non_negative_int, default=500)
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--model", required=True)
     parser.add_argument("--api-key-env-var", default="OPENAI_API_KEY")
@@ -144,6 +150,13 @@ def _positive_int(value: str) -> int:
     return parsed
 
 
+def _non_negative_int(value: str) -> int:
+    parsed = int(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError("value must be non-negative")
+    return parsed
+
+
 def _positive_float(value: str) -> float:
     parsed = float(value)
     if parsed <= 0:
@@ -151,8 +164,17 @@ def _positive_float(value: str) -> float:
     return parsed
 
 
-def _load_passages(path: str) -> list[CanonicalPassage]:
-    text = Path(path).read_text(encoding="utf-8")
+def _load_passages(args: argparse.Namespace) -> list[CanonicalPassage]:
+    if args.xml_file is not None:
+        ingested = ingest_saga_xml_file(
+            args.xml_file,
+            max_characters=args.max_characters,
+            overlap_characters=args.overlap_characters,
+        )
+        return canonicalize_xml_ingestion(ingested).passages
+
+    assert args.passages_file is not None
+    text = Path(args.passages_file).read_text(encoding="utf-8")
     stripped = text.strip()
     if not stripped:
         return []

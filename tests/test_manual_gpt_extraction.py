@@ -243,3 +243,85 @@ def test_manual_script_uses_default_openai_api_key_env_var(
 
     assert code == 0
     assert clients[0].api_key == "secret-key"
+
+
+def test_manual_script_accepts_xml_input(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    xml_file = tmp_path / "bandamanna_saga.en.xml"
+    xml_file.write_text(
+        """\
+<document>
+  <metadata>
+    <title>Bandamanna saga</title>
+    <basename>bandamanna_saga.en</basename>
+  </metadata>
+  <content>
+    <chapter number="1">
+      <paragraph>First paragraph.</paragraph>
+      <paragraph>Second paragraph.</paragraph>
+    </chapter>
+  </content>
+</document>
+""",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(manual_script, "OpenAICompatibleExtractionClient", FakeClient)
+    monkeypatch.setattr(
+        manual_script,
+        "extract_passage",
+        lambda passage, client, allow_markdown_json=False: SimpleNamespace(
+            extraction=empty_passage_extraction(passage.ref.passage_id)
+        ),
+    )
+
+    code = manual_script.main(
+        [
+            "--xml-file",
+            str(xml_file),
+            "--base-url",
+            "https://api.openai.com/v1",
+            "--model",
+            "gpt-4.1",
+            "--max-characters",
+            "20",
+            "--overlap-characters",
+            "0",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert code == 0
+    lines = [line for line in captured.out.splitlines() if line.strip()]
+    assert len(lines) >= 1
+    parsed = json.loads(lines[0])
+    assert parsed["passage"]["source_id"] == "bandamanna-saga"
+
+
+def test_manual_script_requires_exactly_one_input_file() -> None:
+    with pytest.raises(SystemExit):
+        manual_script.main(
+            [
+                "--base-url",
+                "https://api.openai.com/v1",
+                "--model",
+                "gpt-4.1",
+            ]
+        )
+
+    with pytest.raises(SystemExit):
+        manual_script.main(
+            [
+                "--xml-file",
+                "one.xml",
+                "--passages-file",
+                "passages.json",
+                "--base-url",
+                "https://api.openai.com/v1",
+                "--model",
+                "gpt-4.1",
+            ]
+        )

@@ -31,7 +31,7 @@ Manual model-backed extraction workflows are implemented for OpenAI-compatible e
 - Strict extraction response parsing and validation for raw JSON strings.
 - Model-agnostic extraction runner using a client protocol.
 - OpenAI-compatible HTTP provider client for manually configured endpoints.
-- Manual GPT-backed extraction workflow for canonical passages with JSON/JSONL output.
+- Manual GPT-backed extraction workflow with XML-first canonical passage processing and JSON/JSONL output.
 - Benchmark fixture loading and extraction quality scoring helpers.
 - Fake-client tested extraction flow.
 - Development workflow with uv, pytest, and Ruff.
@@ -76,23 +76,25 @@ uv run ruff check .
 
 ## Manual GPT Extraction
 
-Use the manual extraction tool to run canonical passage extraction against OpenAI-compatible endpoints, including OpenAI API.
+Use the manual extraction tool to run passage extraction against OpenAI-compatible endpoints, including OpenAI API.
+
+Default workflow: SagaDB XML -> internal canonical passages -> extraction output.
 
 By default, the tool prints JSONL to stdout. It only writes files when `--output-file` is provided. Progress goes to stderr with `--progress`.
 
 Run a small limited GPT-4.1 extraction with OpenAI:
 
 ```sh
-uv run python tools/manual_gpt_extraction.py --passages-file path/to/canonical_passages.jsonl --base-url https://api.openai.com/v1 --model gpt-4.1 --api-key-env-var OPENAI_API_KEY --limit 2 --progress
+uv run python tools/manual_gpt_extraction.py --xml-file path/to/saga.en.xml --base-url https://api.openai.com/v1 --model gpt-4.1 --api-key-env-var OPENAI_API_KEY --max-characters 6000 --overlap-characters 500 --limit 2 --progress
 ```
 
 Write pretty JSON output explicitly to a file:
 
 ```sh
-uv run python tools/manual_gpt_extraction.py --passages-file path/to/canonical_passages.json --base-url https://api.openai.com/v1 --model gpt-4.1 --output-format json --output-file extraction-results/extraction-output.json
+uv run python tools/manual_gpt_extraction.py --xml-file path/to/saga.en.xml --base-url https://api.openai.com/v1 --model gpt-4.1 --output-format json --output-file extraction-results/extraction-output.json
 ```
 
-Input files may be either a JSON array or JSONL objects containing: `source_id`, `chapter_id`, `passage_id`, and `text` (plus optional `passage_index` and `character_count`).
+Advanced/debug input: `--passages-file` still accepts canonical passages as either a JSON array or JSONL objects containing: `source_id`, `chapter_id`, `passage_id`, and `text` (plus optional `passage_index` and `character_count`). Exactly one of `--xml-file` or `--passages-file` is required.
 
 ## Manual Provider Smoke Test
 
