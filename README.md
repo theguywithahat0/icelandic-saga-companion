@@ -10,7 +10,7 @@ The legacy capstone notebook is preserved at `notebooks/legacy_capstone.ipynb`.
 
 Phase 1 ingestion is implemented. Phase 2 canonical schemas and provenance contracts are implemented. Phase 3 extraction scaffolding is implemented.
 
-Real model-backed extraction workflows are still not implemented. An OpenAI-compatible HTTP provider client exists for manual testing when configured, but automated/batch extraction, graph modeling, retrieval, and companion behavior are planned and not implemented yet. No model benchmark results are included yet.
+Manual model-backed extraction workflows are implemented for OpenAI-compatible endpoints. Automated/batch extraction, graph modeling, retrieval, and companion behavior are still planned and not implemented yet. No model benchmark results are included yet.
 
 ## What Works Now
 
@@ -31,6 +31,7 @@ Real model-backed extraction workflows are still not implemented. An OpenAI-comp
 - Strict extraction response parsing and validation for raw JSON strings.
 - Model-agnostic extraction runner using a client protocol.
 - OpenAI-compatible HTTP provider client for manually configured endpoints.
+- Manual GPT-backed extraction workflow for canonical passages with JSON/JSONL output.
 - Benchmark fixture loading and extraction quality scoring helpers.
 - Fake-client tested extraction flow.
 - Development workflow with uv, pytest, and Ruff.
@@ -71,6 +72,27 @@ Run lint checks:
 ```sh
 uv run ruff check .
 ```
+
+
+## Manual GPT Extraction
+
+Use the manual extraction tool to run canonical passage extraction against OpenAI-compatible endpoints, including OpenAI API.
+
+By default, the tool prints JSONL to stdout. It only writes files when `--output-file` is provided. Progress goes to stderr with `--progress`.
+
+Run a small limited GPT-4.1 extraction with OpenAI:
+
+```sh
+uv run python tools/manual_gpt_extraction.py --passages-file path/to/canonical_passages.jsonl --base-url https://api.openai.com/v1 --model gpt-4.1 --api-key-env-var OPENAI_API_KEY --limit 2 --progress
+```
+
+Write pretty JSON output explicitly to a file:
+
+```sh
+uv run python tools/manual_gpt_extraction.py --passages-file path/to/canonical_passages.json --base-url https://api.openai.com/v1 --model gpt-4.1 --output-format json --output-file extraction-output.json
+```
+
+Input files may be either a JSON array or JSONL objects containing: `source_id`, `chapter_id`, `passage_id`, and `text` (plus optional `passage_index` and `character_count`).
 
 ## Manual Provider Smoke Test
 
