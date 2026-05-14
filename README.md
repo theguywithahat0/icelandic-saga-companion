@@ -89,7 +89,7 @@ uv run python tools/manual_gpt_extraction.py --passages-file path/to/canonical_p
 Write pretty JSON output explicitly to a file:
 
 ```sh
-uv run python tools/manual_gpt_extraction.py --passages-file path/to/canonical_passages.json --base-url https://api.openai.com/v1 --model gpt-4.1 --output-format json --output-file extraction-output.json
+uv run python tools/manual_gpt_extraction.py --passages-file path/to/canonical_passages.json --base-url https://api.openai.com/v1 --model gpt-4.1 --output-format json --output-file extraction-results/extraction-output.json
 ```
 
 Input files may be either a JSON array or JSONL objects containing: `source_id`, `chapter_id`, `passage_id`, and `text` (plus optional `passage_index` and `character_count`).
