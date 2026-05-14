@@ -105,7 +105,7 @@ def run_benchmark(
                 debug_client,
                 allow_markdown_json=allow_markdown_json,
             )
-        except (ExtractionParseError, ProviderResponseError) as exc:
+        except (OSError, ExtractionParseError, ProviderResponseError) as exc:
             if progress:
                 _print_progress_finished(
                     case_id=case.id,
