@@ -194,6 +194,115 @@ def test_manual_script_limit_and_progress(
     assert "[1/1] started" in captured.err
 
 
+def test_manual_script_continue_on_error_keeps_running(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    passages_file = tmp_path / "passages.json"
+    passages_file.write_text(
+        json.dumps(
+            [
+                {
+                    "source_id": "egils",
+                    "chapter_id": "egils:chapter:0001",
+                    "passage_id": "egils:chapter:0001:passage:0001",
+                    "text": "A",
+                },
+                {
+                    "source_id": "egils",
+                    "chapter_id": "egils:chapter:0001",
+                    "passage_id": "egils:chapter:0001:passage:0002",
+                    "text": "B",
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    call_count = 0
+
+    def fake_extract(passage: object, client: object, allow_markdown_json: bool = False) -> object:
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise manual_script.ExtractionParseError("invalid evidence quote")
+        return SimpleNamespace(extraction=empty_passage_extraction(passage.ref.passage_id))
+
+    monkeypatch.setattr(manual_script, "OpenAICompatibleExtractionClient", FakeClient)
+    monkeypatch.setattr(manual_script, "extract_passage", fake_extract)
+
+    code = manual_script.main(
+        [
+            "--passages-file",
+            str(passages_file),
+            "--base-url",
+            "https://api.openai.com/v1",
+            "--model",
+            "gpt-4.1",
+            "--continue-on-error",
+            "--progress",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert code == 0
+    parsed = [json.loads(line) for line in captured.out.splitlines() if line.strip()]
+    assert parsed[0]["status"] == "failed"
+    assert parsed[0]["error_type"] == "ExtractionParseError"
+    assert "invalid evidence quote" in parsed[0]["error"]
+    assert "extraction" not in parsed[0]
+    assert parsed[1]["status"] == "ok"
+    assert "status=failed" in captured.err
+
+
+def test_manual_script_without_continue_on_error_fails_fast(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    passages_file = tmp_path / "passages.json"
+    passages_file.write_text(
+        json.dumps(
+            [
+                {
+                    "source_id": "egils",
+                    "chapter_id": "egils:chapter:0001",
+                    "passage_id": "egils:chapter:0001:passage:0001",
+                    "text": "A",
+                },
+                {
+                    "source_id": "egils",
+                    "chapter_id": "egils:chapter:0001",
+                    "passage_id": "egils:chapter:0001:passage:0002",
+                    "text": "B",
+                },
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    def fake_extract(passage: object, client: object, allow_markdown_json: bool = False) -> object:
+        raise manual_script.ExtractionParseError("invalid evidence quote")
+
+    monkeypatch.setattr(manual_script, "OpenAICompatibleExtractionClient", FakeClient)
+    monkeypatch.setattr(manual_script, "extract_passage", fake_extract)
+
+    code = manual_script.main(
+        [
+            "--passages-file",
+            str(passages_file),
+            "--base-url",
+            "https://api.openai.com/v1",
+            "--model",
+            "gpt-4.1",
+        ]
+    )
+    captured = capsys.readouterr()
+    assert code == 1
+    assert "manual extraction failed: invalid evidence quote" in captured.err
+
+
 
 
 def test_manual_extract_passage_rejects_non_substring_quotes() -> None:
