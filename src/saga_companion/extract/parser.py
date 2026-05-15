@@ -7,7 +7,7 @@ import re
 from typing import Any
 
 from saga_companion.extract.adapters import passage_extraction_from_dict
-from saga_companion.extract.schemas import PassageExtraction
+from saga_companion.extract.schemas import EvidenceRef, PassageExtraction
 
 
 class ExtractionParseError(ValueError):
@@ -38,6 +38,29 @@ def parse_passage_extraction_response(
         return passage_extraction_from_dict(data)
     except ValueError as exc:
         raise ExtractionParseError(f"invalid extraction schema: {exc}") from exc
+
+
+def validate_evidence_quotes_are_substrings(
+    extraction: PassageExtraction,
+    *,
+    passage_text: str,
+) -> None:
+    """Ensure each evidence quote is an exact substring of the canonical passage text."""
+    for evidence in _all_evidence_refs(extraction):
+        if evidence.quote not in passage_text:
+            raise ExtractionParseError(
+                "invalid evidence quote for passage "
+                f"{extraction.passage_id}: {evidence.quote!r} is not an exact substring"
+            )
+
+
+def _all_evidence_refs(extraction: PassageExtraction) -> list[EvidenceRef]:
+    return [
+        *[person.evidence for person in extraction.people],
+        *[place.evidence for place in extraction.places],
+        *[event.evidence for event in extraction.events],
+        *[relationship.evidence for relationship in extraction.relationships],
+    ]
 
 
 def extract_json_object(raw_response: str) -> str:

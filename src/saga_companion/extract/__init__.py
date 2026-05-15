@@ -18,6 +18,7 @@ from saga_companion.extract.parser import (
     ExtractionParseError,
     extract_json_object,
     parse_passage_extraction_response,
+    validate_evidence_quotes_are_substrings,
 )
 from saga_companion.extract.openai_compatible import (
     OpenAICompatibleExtractionClient,
@@ -94,6 +95,7 @@ __all__ = [
     "passage_extraction_from_dict",
     "passage_extraction_to_dict",
     "parse_passage_extraction_response",
+    "validate_evidence_quotes_are_substrings",
     "person_from_dict",
     "person_to_dict",
     "place_from_dict",

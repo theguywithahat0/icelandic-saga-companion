@@ -182,6 +182,24 @@ def test_prompt_distinguishes_death_without_killing() -> None:
     assert "do not invent a killing event or kills relationship" in prompt.system
 
 
+
+
+@pytest.mark.parametrize(
+    "guidance",
+    [
+        "Evidence quotes must be exact contiguous substrings copied from the passage",
+        "no ellipses, paraphrase, stitched spans, or invented punctuation",
+        "Prioritize high-signal relationships",
+        "Do not derive every possible sibling pair",
+        "Avoid duplicate or reciprocal relationships unless direction changes meaning.",
+        "Keep descriptions short; use description: null when relationship/event/evidence already conveys the meaning.",
+    ],
+)
+def test_prompt_includes_quote_and_noise_reduction_guidance(guidance: str) -> None:
+    prompt = build_passage_extraction_prompt(_passage())
+
+    assert guidance in prompt.system
+
 def test_compact_prompt_includes_compact_guidance() -> None:
     prompt = build_passage_extraction_prompt(_passage(), compact=True)
 

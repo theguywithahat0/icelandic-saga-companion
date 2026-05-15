@@ -98,6 +98,14 @@ def test_parser_errors_propagate() -> None:
         extract_passage(_passage("passage-1", "Egil sailed to Iceland."), client)
 
 
+
+
+def test_non_substring_evidence_quote_raises_parse_error() -> None:
+    client = FakeExtractionClient([_invalid_quote_response("passage-1")])
+
+    with pytest.raises(ExtractionParseError, match="invalid evidence quote.*passage-1"):
+        extract_passage(_passage("passage-1", "Egil sailed to Iceland."), client)
+
 def test_client_errors_propagate() -> None:
     client = FakeExtractionClient(error=RuntimeError("client failed"))
 
@@ -162,3 +170,7 @@ def _valid_response(passage_id: str) -> str:
 def _runner_source() -> str:
     runner_path = Path(__file__).parents[1] / "src" / "saga_companion" / "extract" / "runner.py"
     return runner_path.read_text(encoding="utf-8")
+
+
+def _invalid_quote_response(passage_id: str) -> str:
+    return _valid_response(passage_id).replace('"quote": "Egil"', '"quote": "Egil ... Iceland"', 1)

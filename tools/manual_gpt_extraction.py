@@ -17,6 +17,7 @@ from saga_companion.extract import (
     build_passage_extraction_prompt,
     passage_extraction_to_dict,
     parse_passage_extraction_response,
+    validate_evidence_quotes_are_substrings,
 )
 from saga_companion.canonicalize import canonicalize_xml_ingestion
 from saga_companion.ingest.xml_pipeline import ingest_saga_xml_file
@@ -110,6 +111,7 @@ def extract_passage(
         raw_response,
         allow_markdown_json=allow_markdown_json,
     )
+    validate_evidence_quotes_are_substrings(extraction, passage_text=passage.text)
     return ExtractionResult(
         passage=passage,
         prompt=prompt,
