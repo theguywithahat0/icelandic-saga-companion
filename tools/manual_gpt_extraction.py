@@ -51,6 +51,7 @@ def main(argv: list[str] | None = None) -> int:
             client=debug_client,
             progress=args.progress,
             allow_markdown_json=args.allow_markdown_json,
+            continue_on_error=args.continue_on_error,
         )
 
         if args.output_file is None:
@@ -72,6 +73,7 @@ def run_manual_extraction(
     client: _DebugCaptureClient,
     progress: bool,
     allow_markdown_json: bool,
+    continue_on_error: bool,
 ) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
     total = len(passages)
@@ -79,23 +81,42 @@ def run_manual_extraction(
         started = time.monotonic()
         if progress:
             print(f"[{index}/{total}] started {passage.ref.passage_id}", file=sys.stderr)
-        result = extract_passage(
-            passage,
-            client,
-            allow_markdown_json=allow_markdown_json,
-        )
-        records.append(
-            {
-                "passage": _passage_to_dict(passage),
-                "extraction": passage_extraction_to_dict(result.extraction),
-            }
-        )
-        if progress:
-            elapsed = time.monotonic() - started
-            print(
-                f"[{index}/{total}] finished {passage.ref.passage_id} ({elapsed:.2f}s)",
-                file=sys.stderr,
+        try:
+            result = extract_passage(
+                passage,
+                client,
+                allow_markdown_json=allow_markdown_json,
             )
+            records.append(
+                {
+                    "passage": _passage_to_dict(passage),
+                    "status": "ok",
+                    "extraction": passage_extraction_to_dict(result.extraction),
+                }
+            )
+            if progress:
+                elapsed = time.monotonic() - started
+                print(
+                    f"[{index}/{total}] finished {passage.ref.passage_id} status=ok ({elapsed:.2f}s)",
+                    file=sys.stderr,
+                )
+        except (ExtractionParseError, ProviderResponseError, ValueError, OSError) as exc:
+            if not continue_on_error:
+                raise
+            records.append(
+                {
+                    "passage": _passage_to_dict(passage),
+                    "status": "failed",
+                    "error_type": type(exc).__name__,
+                    "error": str(exc),
+                }
+            )
+            if progress:
+                elapsed = time.monotonic() - started
+                print(
+                    f"[{index}/{total}] finished {passage.ref.passage_id} status=failed ({elapsed:.2f}s)",
+                    file=sys.stderr,
+                )
     return records
 
 
@@ -136,6 +157,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("--limit", type=_positive_int)
     parser.add_argument("--allow-markdown-json", action="store_true")
     parser.add_argument("--progress", action="store_true")
+    parser.add_argument("--continue-on-error", action="store_true")
     parser.add_argument("--output-file")
     parser.add_argument(
         "--output-format",
