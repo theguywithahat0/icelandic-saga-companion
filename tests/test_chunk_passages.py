@@ -76,6 +76,44 @@ def test_overlap_appears_between_consecutive_passages_when_possible() -> None:
     assert passages[1].text == "hij\n\nklmnopqrst"
 
 
+def test_overlap_does_not_start_next_passage_mid_word_when_whitespace_available() -> None:
+    chapter = Chapter(title="Chapter 1", text="alpha beta gamma\n\ndelta epsilon zeta", index=1)
+
+    passages = chunk_chapter(chapter, max_characters=23, overlap_characters=8)
+
+    assert passages[0].text == "alpha beta gamma"
+    assert passages[1].text == "delta epsilon zeta"
+    assert not passages[1].text.startswith("mma")
+
+
+def test_hard_split_prefers_sentence_then_whitespace_boundaries() -> None:
+    chapter = Chapter(
+        title="Chapter 1",
+        text="Alpha beta gamma delta. Epsilon zeta eta theta.",
+        index=1,
+    )
+
+    passages = chunk_chapter(chapter, max_characters=18, overlap_characters=0)
+
+    assert [p.text for p in passages] == [
+        "Alpha beta gamma",
+        "delta.",
+        "Epsilon zeta eta",
+        "theta.",
+    ]
+    assert all(not p.text.startswith("eta") for p in passages[1:])
+
+
+def test_hard_split_preserves_whitespace_separator_between_pieces() -> None:
+    chapter = Chapter(title="Chapter 1", text="abcde fghij", index=1)
+
+    passages = chunk_chapter(chapter, max_characters=10, overlap_characters=0)
+
+    assert [p.text for p in passages] == ["abcde", "fghij"]
+    assert all(p.character_count <= 10 for p in passages)
+    assert all("abcdefghij" not in p.text for p in passages)
+
+
 def test_empty_chapter_text_returns_empty_list() -> None:
     chapter = Chapter(title="Chapter 1", text=" \n\n ", index=1)
 

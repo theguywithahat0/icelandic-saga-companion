@@ -116,18 +116,53 @@ def _split_paragraph(paragraph: str, max_characters: int) -> list[_Piece]:
 
         hard_pieces = _hard_split(sentence, max_characters)
         for index, hard_piece in enumerate(hard_pieces):
-            separator = sentence_separator if index == 0 else ""
-            pieces.append(_Piece(text=hard_piece, separator=separator))
+            separator = sentence_separator if index == 0 else hard_piece.separator
+            pieces.append(_Piece(text=hard_piece.text, separator=separator))
 
     return pieces
 
 
-def _hard_split(text: str, max_characters: int) -> list[str]:
-    return [
-        text[start : start + max_characters].strip()
-        for start in range(0, len(text), max_characters)
-        if text[start : start + max_characters].strip()
-    ]
+def _hard_split(text: str, max_characters: int) -> list[_Piece]:
+    chunks: list[_Piece] = []
+    start = 0
+    text_len = len(text)
+    next_separator = ""
+
+    while start < text_len:
+        end = min(start + max_characters, text_len)
+        if end < text_len:
+            boundary = _find_preferred_boundary(text, start, end)
+            if boundary is not None and boundary > start:
+                end = boundary
+
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(_Piece(text=chunk, separator=next_separator))
+
+        start = end
+        skipped_whitespace = False
+        while start < text_len and text[start].isspace():
+            skipped_whitespace = True
+            start += 1
+        next_separator = " " if skipped_whitespace else ""
+
+    return chunks
+
+
+def _find_preferred_boundary(text: str, start: int, end: int) -> int | None:
+    paragraph_idx = text.rfind("\n\n", start, end)
+    if paragraph_idx != -1:
+        return paragraph_idx
+
+    for idx in range(end - 1, start, -1):
+        if text[idx - 1] in ".!?" and text[idx].isspace():
+            return idx
+
+    whitespace_idx = text.rfind(" ", start, end)
+    if whitespace_idx != -1:
+        return whitespace_idx
+
+    return None
 
 
 def _pack_pieces(
@@ -176,7 +211,7 @@ def _start_next_passage(
     if overlap_characters == 0 or not previous:
         return piece_text
 
-    overlap = previous[-overlap_characters:].strip()
+    overlap = _bounded_overlap(previous, overlap_characters).strip()
     if not overlap:
         return piece_text
 
@@ -185,11 +220,41 @@ def _start_next_passage(
     if available_overlap <= 0:
         return piece_text
 
-    overlap = overlap[-available_overlap:].strip()
+    overlap = _fit_overlap_to_budget(overlap, available_overlap).strip()
     if not overlap:
         return piece_text
 
     return f"{overlap}{separator}{piece_text}".strip()
+
+
+def _bounded_overlap(previous: str, overlap_characters: int) -> str:
+    if overlap_characters <= 0 or not previous:
+        return ""
+
+    start = max(0, len(previous) - overlap_characters)
+    window = previous[start:]
+    if start == 0:
+        return window
+
+    for idx, char in enumerate(window):
+        if char.isspace():
+            return window[idx + 1 :]
+
+    return window
+
+
+def _fit_overlap_to_budget(overlap: str, budget: int) -> str:
+    if budget <= 0:
+        return ""
+    if len(overlap) <= budget:
+        return overlap
+
+    candidate = overlap[-budget:]
+    for idx, char in enumerate(candidate):
+        if char.isspace():
+            return candidate[idx + 1 :]
+
+    return ""
 
 
 def _build_passage(chapter: Chapter, text: str, passage_index: int) -> Passage:
