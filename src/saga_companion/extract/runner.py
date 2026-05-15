@@ -5,7 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from saga_companion.extract.parser import parse_passage_extraction_response
+from saga_companion.extract.parser import (
+    parse_passage_extraction_response,
+    validate_evidence_quotes_are_substrings,
+)
 from saga_companion.extract.prompts import (
     ExtractionPrompt,
     build_passage_extraction_prompt,
@@ -39,6 +42,7 @@ def extract_passage(
     prompt = build_passage_extraction_prompt(passage)
     raw_response = client.generate(system=prompt.system, user=prompt.user)
     extraction = parse_passage_extraction_response(raw_response)
+    validate_evidence_quotes_are_substrings(extraction, passage_text=passage.text)
     return ExtractionResult(
         passage=passage,
         prompt=prompt,

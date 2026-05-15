@@ -194,6 +194,32 @@ def test_manual_script_limit_and_progress(
     assert "[1/1] started" in captured.err
 
 
+
+
+def test_manual_extract_passage_rejects_non_substring_quotes() -> None:
+    passage = manual_script.CanonicalPassage(
+        ref=manual_script.PassageRef(
+            source_id="egils",
+            chapter_id="egils:chapter:0001",
+            passage_id="egils:chapter:0001:passage:0001",
+            passage_index=1,
+        ),
+        text="Egil sailed to Iceland.",
+        character_count=23,
+    )
+
+    class StaticClient:
+        def generate(self, system: str, user: str) -> str:
+            return (
+                '{"passage_id":"egils:chapter:0001:passage:0001","people":[],"places":[],"events":[],'
+                '"relationships":[{"subject":"Egil","relationship_type":"travels_to","object":"Iceland",'
+                '"description":null,"evidence":{"source_id":"egils","chapter_id":"egils:chapter:0001",'
+                '"passage_id":"egils:chapter:0001:passage:0001","quote":"Egil ... Iceland","confidence":0.7}}]}'
+            )
+
+    with pytest.raises(manual_script.ExtractionParseError, match="invalid evidence quote"):
+        manual_script.extract_passage(passage, StaticClient(), allow_markdown_json=False)
+
 def test_manual_script_uses_default_openai_api_key_env_var(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
