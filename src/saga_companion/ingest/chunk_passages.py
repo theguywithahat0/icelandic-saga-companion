@@ -116,16 +116,17 @@ def _split_paragraph(paragraph: str, max_characters: int) -> list[_Piece]:
 
         hard_pieces = _hard_split(sentence, max_characters)
         for index, hard_piece in enumerate(hard_pieces):
-            separator = sentence_separator if index == 0 else ""
-            pieces.append(_Piece(text=hard_piece, separator=separator))
+            separator = sentence_separator if index == 0 else hard_piece.separator
+            pieces.append(_Piece(text=hard_piece.text, separator=separator))
 
     return pieces
 
 
-def _hard_split(text: str, max_characters: int) -> list[str]:
-    chunks: list[str] = []
+def _hard_split(text: str, max_characters: int) -> list[_Piece]:
+    chunks: list[_Piece] = []
     start = 0
     text_len = len(text)
+    next_separator = ""
 
     while start < text_len:
         end = min(start + max_characters, text_len)
@@ -136,11 +137,14 @@ def _hard_split(text: str, max_characters: int) -> list[str]:
 
         chunk = text[start:end].strip()
         if chunk:
-            chunks.append(chunk)
+            chunks.append(_Piece(text=chunk, separator=next_separator))
 
         start = end
+        skipped_whitespace = False
         while start < text_len and text[start].isspace():
+            skipped_whitespace = True
             start += 1
+        next_separator = " " if skipped_whitespace else ""
 
     return chunks
 

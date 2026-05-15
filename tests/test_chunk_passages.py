@@ -104,6 +104,16 @@ def test_hard_split_prefers_sentence_then_whitespace_boundaries() -> None:
     assert all(not p.text.startswith("eta") for p in passages[1:])
 
 
+def test_hard_split_preserves_whitespace_separator_between_pieces() -> None:
+    chapter = Chapter(title="Chapter 1", text="abcde fghij", index=1)
+
+    passages = chunk_chapter(chapter, max_characters=10, overlap_characters=0)
+
+    assert [p.text for p in passages] == ["abcde", "fghij"]
+    assert all(p.character_count <= 10 for p in passages)
+    assert all("abcdefghij" not in p.text for p in passages)
+
+
 def test_empty_chapter_text_returns_empty_list() -> None:
     chapter = Chapter(title="Chapter 1", text=" \n\n ", index=1)
 
